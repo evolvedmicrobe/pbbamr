@@ -1,4 +1,4 @@
-CFLAGS=-Wall -I../../inst/include/ --std=c++11 -Wno-deprecated-register -Wno-unused-local-typedef -lhts -L../htslib/ -lz -lm 
+CFLAGS=-fPIC -Wall -I../../inst/include/ --std=c++11 -Wno-deprecated-register -Wno-unused-local-typedefs
 
 # Should be equivalent to your list of C files, if you don't build selectively
 #SRC=$(wildcard *.cpp)
