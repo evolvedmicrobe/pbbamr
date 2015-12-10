@@ -1,0 +1,3 @@
+exportPattern("^[[:alpha:]]+")
+useDynLib(pbbamr)
+importFrom(Rcpp,evalCpp)
