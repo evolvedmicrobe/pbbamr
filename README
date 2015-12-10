@@ -41,4 +41,8 @@ rm -rf ~/git/pbbamr/src/htslib/test
 # the include directory
 bcp --scan --boost=/Users/nigel/git/bh/local/boost_1_58_0/ src/pbbam/*.cpp inst/include/
 bcp --scan --boost=/Users/nigel/git/bh/local/boost_1_58_0/ src/pbbam/*.h inst/include/
-bcp --scan --boost=/Users/nigel/git/bh/local/boost_1_58_0/ inst/include/pbbam/pbbam/*.h inst/include/
+bcp --scan --boost=/Users/nigel/git/bh/local/boost_1_58_0/ inst/include/pbbam/*.h inst/include/
+bcp --scan --boost=/Users/nigel/git/bh/local/boost_1_58_0/ inst/include/pbbam/internal/*.h inst/include/
+
+# For some reason this didn't copy
+cp  boost_1_58_0/boost/utility/string_ref.hpp ~/git/pbbamr/inst/include/boost/utility/
