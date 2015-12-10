@@ -1,0 +1,44 @@
+###### THE ORIGIN OF THIS PACKAGE ######
+
+This package is designed to be a stand alone library that can access PacBio BAM
+files.  In order to be stand alone, it has hard forked copies of the following
+libraries:
+
+* Boost (1.58)
+* HTSLIB (P4, 12/10/2015)
+* PBBAM (711d42a034f841e6314c1ecf4c2a82ec7f53359b)
+
+Directly copying the files was done to enable a cleaner build, but none of the
+files were edited and can likely be recopied using the following set of
+commands to refill the files for the package.
+
+The package relies on Rcpp, and outside of just copying the files, generating
+the Makefile and Makevars file was the only real challenge in adding the
+dependencies.  Both htslib and pbbam are intended to be linked in as static
+libraries, avoiding any dynamic loading issues, and the new make files are as
+such.
+
+
+#Move pbbam over
+mkdir ~/git/pbbamr/src/pbbam/
+cp -r ~/git/pbbam/src/ ~/git/pbbamr/src/pbbam/
+cp -r ~/git/pbbam/include/pbbam ~/git/pbbamr/inst/include/pbbam
+
+
+## Move htslib package over 
+cd /Users/nigel/p4/ndelaney_Nigels-MacBook-Pro_1663/depot/software/smrtanalysis/bioinformatics/staging/PostPrimary/
+mkdir ~/git/pbbamr/src/htslib
+cp -r htslib/ ~/git/pbbamr/src/htslib/
+mkdir ~/git/pbbamr/inst/include/htslib
+mv ~/git/pbbamr/src/htslib/* ~/git/pbbamr/inst/include/htslib/
+# Delete the tests
+rm -rf ~/git/pbbamr/src/htslib/test
+
+
+## Subset the boost headers we need
+# bcp is a utility to do this and you may need to download (brew install boost-bcp)
+# Run this command to detect the dependencies we need and add them to 
+# the include directory
+bcp --scan --boost=/Users/nigel/git/bh/local/boost_1_58_0/ src/pbbam/*.cpp inst/include/
+bcp --scan --boost=/Users/nigel/git/bh/local/boost_1_58_0/ src/pbbam/*.h inst/include/
+bcp --scan --boost=/Users/nigel/git/bh/local/boost_1_58_0/ inst/include/pbbam/pbbam/*.h inst/include/
