@@ -1,0 +1,18 @@
+PKG_CPPFLAGS =	-I../inst/include/  --std=c++11 -I${R_HOME}/library/BH/include -Wno-unused-local-typedefs -L/usr/lib  -lz -lm -lpbbam -Lpbbam/ -lhts -Lhtslib/
+CXX_STD = CXX11
+PKG_LIBS= -lhts -lpbbam -Lpbbam/ -L/Users/nigel/git/pbbamr/src/htslib/ -L/Users/nigel/git/pbbamr/src/pbbam/
+.PHONY: htslib  pbbam
+
+all : $(SHLIB)
+
+$(SHLIB) : htslib pbbam
+
+htslib:
+	(cd htslib; make lib-static; cd ..)
+	echo "building"
+
+pbbam:
+	(cd pbbam;	make)
+
+
+
