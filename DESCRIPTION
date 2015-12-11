@@ -10,3 +10,4 @@ License: MIT
 LazyData: TRUE
 LinkingTo: Rcpp
 Imports: Rcpp
+SystemRequirements: C++11
