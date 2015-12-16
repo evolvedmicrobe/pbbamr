@@ -68,5 +68,6 @@ DataFrame loadpbi(std::string filename) {
   // Now let's make the list a data.frame
   df.attr("class") = "data.frame";
   df.attr("row.names") = seq_len(raw.NumReads());
+  df.attr("bam.file") = filename;
   return df;
 }
