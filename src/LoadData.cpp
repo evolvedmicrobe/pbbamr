@@ -169,7 +169,7 @@ List loadDataAtOffsets(CharacterVector offsets, std::string bamName, std::string
         NumericVector G(snrs[2], seq.length());
         NumericVector T(snrs[3], seq.length());
 #endif
-        DataFrame df = DataFrame::create(Named("seq") = createFactorFromSeqString(seq),
+        DataFrame df = DataFrame::create(Named("read") = createFactorFromSeqString(seq),
                                          Named("ref") = createFactorFromSeqString(ref));
                                         // Named("snrA") = A,
                                         // Named("snrC") = C,
