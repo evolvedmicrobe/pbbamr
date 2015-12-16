@@ -1,24 +1,24 @@
-PKG_CPPFLAGS =	-I../inst/include/  --std=c++11 -Wno-unused-local-typedefs -L/usr/lib  -lz -lm -lpbbam -Lpbbam/ -lhts -Lhtslib/
+PKG_CPPFLAGS =	-I../inst/include/  --std=c++11 -Wno-unused-local-typedefs -Wno-unused-local-typedef -L/usr/lib  -lz -lm -lpbbam -Lpbbam/ -lhts -Lhtslib/
 
 # The R extensions manual says we should specify a C++11 flag with this environmental variable
-# 
+#
 # CXX_STD = CXX11
 #
 # and also set the requirements file to list both.  However, this will totally goof the install
 # if the R Makeconf file is poorly formed, in particular missing entries for:
-# 
+#
 # CXX1X
 # CXX1XFLAGS
 # CXX1XPICFLAGS
 # CXX1XSTD
 #
 # If any of those variables are missing, the compilation process will fail when no compiler is
-# passed to the command line to do the loading (because if the variable isn't set, it just 
+# passed to the command line to do the loading (because if the variable isn't set, it just
 # outputs an empty string "" as the name of the compiler/linker).
 #
 # Once we consistently use version R > 3.1 which has better C++11 support this variable can be set again.
 #
-# http://stackoverflow.com/questions/34211369/rcpp-library-wont-build-cant-find-compiler-on-ubuntu 
+# http://stackoverflow.com/questions/34211369/rcpp-library-wont-build-cant-find-compiler-on-ubuntu
 #
 PKG_LIBS= -lpbbam -lhts -Lpbbam/ -Lhtslib/ -lz -lm
 .PHONY: htslib  pbbam all
