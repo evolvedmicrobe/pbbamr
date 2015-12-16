@@ -7,7 +7,7 @@
 #' number of attributes present, it will either load just the basic data, or optionally
 #' the mapping and barcode data.
 #'
-#' @param filename A character vector with the file name in it.
+#' @param filename The BAM file name (without .pbi)
 #'
 #' @export
 #' @examples loadpbi("~git/pbbam/tests/data/dataset/bam_mapping_1.bam.pbi")

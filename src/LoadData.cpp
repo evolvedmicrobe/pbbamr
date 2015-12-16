@@ -55,7 +55,7 @@ IntegerVector createFactorFromSeqString(const std::string& seq) {
 //' number of attributes present, it will either load just the basic data, or optionally
 //' the mapping and barcode data.
 //'
-//' @param filename A character vector with the file name in it.
+//' @param filename The BAM file name (without .pbi)
 //'
 //' @export
 //' @examples loadpbi("~git/pbbam/tests/data/dataset/bam_mapping_1.bam.pbi")
@@ -66,10 +66,10 @@ DataFrame loadpbi(std::string filename) {
    * dataframe directly, and then update the attributes to convert to a data frame
    */
   //"/Users/nigel/git/pbbam/tests/data/dataset/bam_mapping_1.bam.pbi"
-  PbiRawData raw(filename);
+  PbiRawData raw(filename + ".pbi");
   auto basicData = raw.BasicData();
 
-  /* Because R can't handle longs, the safest way we will deal with this 
+  /* Because R can't handle longs, the safest way we will deal with this
    * is to convert them to strings. The most efficient would be to cast them
    * to doubles which I may implement later, but that is so ugly I can't bring
    * myself to do it now.
@@ -155,7 +155,7 @@ List loadDataAtOffsets(CharacterVector offsets, std::string bamName, std::string
       reader.VirtualSeek(offset);
       BamRecord r;
       if (reader.GetNext(r)) {
-        
+
         std::string seq = r.Sequence(orientation, true, true);
         std::string ref = fasta.ReferenceSubsequence(r, orientation, true, true);
 
