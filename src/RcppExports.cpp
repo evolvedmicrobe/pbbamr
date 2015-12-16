@@ -16,14 +16,16 @@ BEGIN_RCPP
     return __result;
 END_RCPP
 }
-// timesTwo
-CharacterVector timesTwo(NumericVector x);
-RcppExport SEXP pbbamr_timesTwo(SEXP xSEXP) {
+// loadDataAtOffsets
+List loadDataAtOffsets(CharacterVector offsets, std::string bamName, std::string indexedFastaName);
+RcppExport SEXP pbbamr_loadDataAtOffsets(SEXP offsetsSEXP, SEXP bamNameSEXP, SEXP indexedFastaNameSEXP) {
 BEGIN_RCPP
     Rcpp::RObject __result;
     Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< NumericVector >::type x(xSEXP);
-    __result = Rcpp::wrap(timesTwo(x));
+    Rcpp::traits::input_parameter< CharacterVector >::type offsets(offsetsSEXP);
+    Rcpp::traits::input_parameter< std::string >::type bamName(bamNameSEXP);
+    Rcpp::traits::input_parameter< std::string >::type indexedFastaName(indexedFastaNameSEXP);
+    __result = Rcpp::wrap(loadDataAtOffsets(offsets, bamName, indexedFastaName));
     return __result;
 END_RCPP
 }

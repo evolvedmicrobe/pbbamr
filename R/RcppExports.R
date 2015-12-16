@@ -15,7 +15,15 @@ loadpbi <- function(filename) {
     .Call('pbbamr_loadpbi', PACKAGE = 'pbbamr', filename)
 }
 
-timesTwo <- function(x) {
-    .Call('pbbamr_timesTwo', PACKAGE = 'pbbamr', x)
+#' Load BAM alignments as a list of data frames.
+#'
+#' @param offsets The virtual file offsets to retrieve BAM records from (can be obtained from the index file based on loadpbi).
+#' @param bamName The BAM file name to grab
+#' @param indexedFastaName The name of the indexed fasta file this should come from.
+#'
+#' @return Returns a list of alignments as data frames.
+#' @export
+loadDataAtOffsets <- function(offsets, bamName, indexedFastaName) {
+    .Call('pbbamr_loadDataAtOffsets', PACKAGE = 'pbbamr', offsets, bamName, indexedFastaName)
 }
 
