@@ -116,7 +116,7 @@ was deleted and which basepair followed that deletion.
 
 ```{r, echo=TRUE, results='asis'}
 # First let's write a function to find single deletion events, and report 
-# the preceding and deleted base
+# the deleted base and following base.
 findSingleDeletions <- function(aln) {
   # Where are the deletions of size 1?
   # First we will convert it to run length encoding (gap = 5)
