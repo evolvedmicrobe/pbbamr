@@ -149,6 +149,11 @@ List loadDataAtOffsets(CharacterVector offsets, std::string bamName, std::string
     int n = offsets.size();
     List results(n);
     for(int i=0; i < n; i++) {
+      // Check for interrupt
+      if (Progress::check_abort() ) {
+        Rcout << "Data load aborted by user." << std::endl;
+        return NULL;
+      }
       // back convert from string to long.
       std::string offset_string = as<std::string>(offsets[i]);
       long offset = std::stol(offset_string);
