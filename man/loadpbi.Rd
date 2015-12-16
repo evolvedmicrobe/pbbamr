@@ -7,7 +7,7 @@
 loadpbi(filename)
 }
 \arguments{
-\item{filename}{A character vector with the file name in it.}
+\item{filename}{The BAM file name (without .pbi)}
 }
 \description{
 This function loads a pbi index file into a dataframe.  Depending on the
