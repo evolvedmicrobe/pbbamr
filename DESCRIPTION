@@ -5,8 +5,12 @@ Version: 0.1
 Date: 2015-12-09
 Author: Nigel Delaney
 Maintainer: Nigel Delaney <google.can.find.me@somewhere.net>
-Description: This R package wraps both the pbbam and htslib libraries, providing tools to query and investigate BAM files taking advantage of the PBI index format.
+Description: This R package wraps both the pbbam and htslib libraries, providing
+    tools to query and investigate BAM files taking advantage of the PBI index
+    format.
 License: MIT
 LazyData: TRUE
 LinkingTo: Rcpp
-Imports: Rcpp
+Imports:
+    Rcpp
+RoxygenNote: 5.0.1

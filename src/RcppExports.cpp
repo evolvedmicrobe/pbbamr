@@ -5,6 +5,17 @@
 
 using namespace Rcpp;
 
+// loadpbi
+DataFrame loadpbi(std::string filename);
+RcppExport SEXP pbbamr_loadpbi(SEXP filenameSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< std::string >::type filename(filenameSEXP);
+    __result = Rcpp::wrap(loadpbi(filename));
+    return __result;
+END_RCPP
+}
 // timesTwo
 CharacterVector timesTwo(NumericVector x);
 RcppExport SEXP pbbamr_timesTwo(SEXP xSEXP) {
