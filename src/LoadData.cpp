@@ -55,12 +55,21 @@ IntegerVector createFactorFromSeqString(const std::string& seq) {
 //' number of attributes present, it will either load just the basic data, or optionally
 //' the mapping and barcode data.
 //'
-//' @param filename The BAM file name (without .pbi)
+//' The original BAM file can also be read to gather additional covariates such as the SNR, read quality 
+//' and number of passes, though this may take longer.
 //'
+//' @param filename The BAM file name (without .pbi)
+//' @param loadSNR Should we load the four channel SNR data? (Default = FALSE)
+//' @param loadNumPasses Should we load the number of passes data? (Default = FALSE)
+//' @param loadRQ Shouold we load the read quality? (Default = FALSE)
 //' @export
 //' @examples loadpbi("~git/pbbam/tests/data/dataset/bam_mapping_1.bam.pbi")
 // [[Rcpp::export]]
-DataFrame loadpbi(std::string filename) {
+DataFrame loadpbi(std::string filename,
+                  bool loadSNR= false,
+                  bool loadNumPasses = false,
+                  bool loadRQ = false
+                  ) {
   /* Because the pbi file has different values depending on what it contains,
    * I am planning to construct it as a list of vectors, rather than a
    * dataframe directly, and then update the attributes to convert to a data frame
@@ -79,7 +88,6 @@ DataFrame loadpbi(std::string filename) {
    for(int i=0; i< raw.NumReads(); i++) {
       offsets[i] = std::to_string(long_offsets[i]);
    }
-
 
   // R data frames are basically lists
   auto df =  List::create( Named("hole") = basicData.holeNumber_,
@@ -121,6 +129,66 @@ DataFrame loadpbi(std::string filename) {
     df["bcr"] = bcd.bcReverse_;
     df["bcqual"] = std::vector<int>(bcd.bcQual_.begin(), bcd.bcQual_.end());
   }
+
+  // Load metrics from within the BAM?
+  if (loadSNR || loadNumPasses || loadRQ) {
+    /* Derek said every file in the pbi should be in the index, and every item
+    should be ordered in the BAM so I am going to parse directly. */
+    NumericVector snrA, snrC, snrG, snrT, np, rq;
+    if (loadSNR) {
+      snrA = NumericVector(raw.NumReads());
+      snrC = NumericVector(raw.NumReads());
+      snrG = NumericVector(raw.NumReads());
+      snrT = NumericVector(raw.NumReads());
+      df["snrA"] = snrA; df["snrC"] = snrC;
+      df["snrG"] = snrG; df["snrT"] = snrT;
+    }
+    if(loadNumPasses) {
+      np = NumericVector(raw.NumReads());
+      df["np"] = np;
+    }
+    if (loadRQ) {
+      rq = NumericVector(raw.NumReads());
+      df["rq"] = rq;
+    }
+
+
+    int i=0;
+    BamReader br(filename);
+    BamRecord r;
+    while (br.GetNext(r) ) {      
+      if (loadSNR)
+      { 
+          if (r.HasSignalToNoise()) {
+            auto snrs = r.SignalToNoise();
+            snrA[i] = snrs[0]; snrC[i] = snrs[1];
+            snrG[i] = snrs[2]; snrT[i] = snrs[3];
+          } else{
+            auto na = NumericVector::get_na();
+            snrA[i] = na; snrC[i] = na;
+            snrG[i] = na; snrT[i] = na;
+          }
+      }
+
+      if (loadNumPasses) {
+        if(r.HasNumPasses()) {
+          np[i] = r.NumPasses();
+        } else {
+          np[i] = NumericVector::get_na();
+        }
+      }
+
+      if (loadRQ) {
+        if (r.HasReadAccuracy()) {
+          rq[i] = r.ReadAccuracy();
+        } else {
+          rq[i] = NumericVector::get_na();
+        }
+      }
+      i++;
+    }
+  }
+
   // Now let's make the list a data.frame
   df.attr("class") = "data.frame";
   df.attr("row.names") = seq_len(raw.NumReads());

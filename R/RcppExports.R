@@ -7,12 +7,17 @@
 #' number of attributes present, it will either load just the basic data, or optionally
 #' the mapping and barcode data.
 #'
-#' @param filename The BAM file name (without .pbi)
+#' The original BAM file can also be read to gather additional covariates such as the SNR, read quality 
+#' and number of passes, though this may take longer.
 #'
+#' @param filename The BAM file name (without .pbi)
+#' @param loadSNR Should we load the four channel SNR data? (Default = FALSE)
+#' @param loadNumPasses Should we load the number of passes data? (Default = FALSE)
+#' @param loadRQ Shouold we load the read quality? (Default = FALSE)
 #' @export
 #' @examples loadpbi("~git/pbbam/tests/data/dataset/bam_mapping_1.bam.pbi")
-loadpbi <- function(filename) {
-    .Call('pbbamr_loadpbi', PACKAGE = 'pbbamr', filename)
+loadpbi <- function(filename, loadSNR = FALSE, loadNumPasses = FALSE, loadRQ = FALSE) {
+    .Call('pbbamr_loadpbi', PACKAGE = 'pbbamr', filename, loadSNR, loadNumPasses, loadRQ)
 }
 
 #' Load BAM alignments as a list of data frames.

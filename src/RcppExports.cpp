@@ -6,13 +6,16 @@
 using namespace Rcpp;
 
 // loadpbi
-DataFrame loadpbi(std::string filename);
-RcppExport SEXP pbbamr_loadpbi(SEXP filenameSEXP) {
+DataFrame loadpbi(std::string filename, bool loadSNR, bool loadNumPasses, bool loadRQ);
+RcppExport SEXP pbbamr_loadpbi(SEXP filenameSEXP, SEXP loadSNRSEXP, SEXP loadNumPassesSEXP, SEXP loadRQSEXP) {
 BEGIN_RCPP
     Rcpp::RObject __result;
     Rcpp::RNGScope __rngScope;
     Rcpp::traits::input_parameter< std::string >::type filename(filenameSEXP);
-    __result = Rcpp::wrap(loadpbi(filename));
+    Rcpp::traits::input_parameter< bool >::type loadSNR(loadSNRSEXP);
+    Rcpp::traits::input_parameter< bool >::type loadNumPasses(loadNumPassesSEXP);
+    Rcpp::traits::input_parameter< bool >::type loadRQ(loadRQSEXP);
+    __result = Rcpp::wrap(loadpbi(filename, loadSNR, loadNumPasses, loadRQ));
     return __result;
 END_RCPP
 }

@@ -4,15 +4,25 @@
 \alias{loadpbi}
 \title{Load PBI BAM index file}
 \usage{
-loadpbi(filename)
+loadpbi(filename, loadSNR = FALSE, loadNumPasses = FALSE, loadRQ = FALSE)
 }
 \arguments{
 \item{filename}{The BAM file name (without .pbi)}
+
+\item{loadSNR}{Should we load the four channel SNR data? (Default = FALSE)}
+
+\item{loadNumPasses}{Should we load the number of passes data? (Default = FALSE)}
+
+\item{loadRQ}{Shouold we load the read quality? (Default = FALSE)}
 }
 \description{
 This function loads a pbi index file into a dataframe.  Depending on the
 number of attributes present, it will either load just the basic data, or optionally
 the mapping and barcode data.
+}
+\details{
+The original BAM file can also be read to gather additional covariates such as the SNR, read quality 
+and number of passes, though this may take longer.
 }
 \examples{
 loadpbi("~git/pbbam/tests/data/dataset/bam_mapping_1.bam.pbi")
