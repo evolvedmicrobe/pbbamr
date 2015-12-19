@@ -49,6 +49,85 @@ IntegerVector createFactorFromSeqString(const std::string& seq) {
 }
 
 
+/* Convert two arrays of previous and current basepair into a 
+   dinucleotide context vector.
+*/
+IntegerVector createDinucleotidFactorFromSeqs(const IntegerVector& prevBP,
+                                              const IntegerVector& curBP) {
+  IntegerVector ctx(prevBP.size());
+  for(int i = 0; i < prevBP.size(); i++ ) {
+    auto prv = prevBP[i];
+    auto cur = curBP[i];
+    auto offset = prv == cur ? 0 : 4;
+    // Expensive check that can probably be removed?
+    if ( cur < 0 || cur > 4 || prv <0 || prv > 4) {
+        throw std::runtime_error("Can't make context factor with basepairs outside of 0-4");
+    }    
+    ctx[i] = offset + cur; 
+  }
+  ctx.attr("class") = "factor";
+  ctx.attr("levels") = CharacterVector::create("AA", "CC", "GG", "TT", "NA", "NC", "NG", "NT");
+  return ctx;
+}
+
+/* Given an aligned read and reference pair, we will subsample down to 
+   a smaller set of values 
+*/
+std::pair<std::string, std::string> _sampleAndTrimSeqs(const std::string& read, 
+                                                       const std::string& ref,
+                                                       int trimToLength) {
+
+  if (read.length() != ref.length()) {
+    throw std::runtime_error("Read and reference had different lengths!");
+  }
+  // Sample down if needed
+  auto n = read.length();
+  size_t startRow, endRow;
+  if (trimToLength !=0 && n > trimToLength) {
+      auto maxRow = n - trimToLength + 1;
+      startRow = static_cast<int>(maxRow * R::runif(0,1));
+      endRow  = std::max(n, startRow + trimToLength);
+  } else {
+    startRow =0;
+    endRow = n;
+  } 
+
+  /* Let's make sure we don't start or end with a gap.
+     We want the first and last two  
+     This could be made more efficient.
+  */
+  while (startRow < (n - 1) && (
+         read[startRow] == '-' ||
+         ref[startRow] == '-' ||
+         ref[startRow + 1] == '-' ||
+         read[startRow + 1] == '-') ) {
+    startRow++;
+  }
+  while (endRow > 1 && (
+         read[endRow] == '-' ||
+         ref[endRow] == '-' ||
+         read[endRow-1] == '-' ||
+         ref[endRow-1] == '-')){
+    endRow--;
+  }
+
+  if (read[endRow] == '-' || ref[endRow] == '-' ||  // we might have gone all the way to the end
+      read[startRow] == '-' || ref[startRow] == '-' ||
+      read[endRow-1] == '-' || ref[endRow-1] == '-' ||  // we might have gone all the way to the end
+      read[startRow+1] == '-' || ref[startRow+1] == '-' ||
+      endRow - startRow < 10) {
+    throw new std::runtime_error("Trying to sample reads down wound up with \
+                                  a sequence of size < 10.  Are there a lot of \
+                                  gaps or small sequences in this data?");        
+  }
+
+  // Now let's subset
+  int length = endRow - startRow + 1;
+  auto new_read = read.substr(startRow, length);
+  auto new_ref = ref.substr(startRow, length);
+  return std::pair<std::string, std::string>(new_read, new_ref);
+}
+
 //' Load PBI BAM index file
 //'
 //' This function loads a pbi index file into a dataframe.  Depending on the
@@ -233,20 +312,9 @@ List loadDataAtOffsets(CharacterVector offsets, std::string bamName, std::string
 
         if (seq.size() != ref.size())
           throw std::runtime_error("Sequence and reference parts are of different size");
-#if SNR
-        // Generate SNR vectors
-        auto snrs = r.SignalToNoise();
-        NumericVector A(snrs[0], seq.length());
-        NumericVector C(snrs[1], seq.length());
-        NumericVector G(snrs[2], seq.length());
-        NumericVector T(snrs[3], seq.length());
-#endif
+
         DataFrame df = DataFrame::create(Named("read") = createFactorFromSeqString(seq),
                                          Named("ref") = createFactorFromSeqString(ref));
-                                        // Named("snrA") = A,
-                                        // Named("snrC") = C,
-                                        // Named("snrG") = G,
-                                        // Named("snrT") = T);
         results[i] = df;
         continue;
       } else{
@@ -259,6 +327,103 @@ List loadDataAtOffsets(CharacterVector offsets, std::string bamName, std::string
   }
   return List::create(Named("test") = 2);
 }
+
+
+//' Load BAM alignments as a list of list for the HMM model.
+//'
+//' @param offsets The virtual file offsets to retrieve BAM records from (can be obtained from the index file based on loadpbi).
+//' @param bamName The BAM file name to grab
+//' @param indexedFastaName The name of the indexed fasta file this should come from.
+//' @param trimToLength How much should we subsample the alignments? 
+//'
+//' @return Returns a list of phase2datasets as data frames.
+//' @export
+// [[Rcpp::export]]
+List loadHMMfromBAM(CharacterVector offsets, 
+                    std::string bamName, 
+                    std::string indexedFastaName,
+                    int trimToLength = 140 ) {
+  try {
+
+    if (trimToLength < 0) {
+      Rcout << "Trim to Length must be >= 0" << std::endl;
+      return NULL;
+    }
+
+    IndexedFastaReader fasta(indexedFastaName);
+    BamReader reader(bamName);
+
+    // Always get reads in native orientation.
+    auto orientation = Orientation::NATIVE;
+    int n = offsets.size();
+    List results(n);
+    for(int i=0; i < n; i++) {
+      // Check for interrupt
+      if (i % 20 == 0 ) {
+        Rcpp::checkUserInterrupt();
+      }
+      // back convert from string to long.
+      std::string offset_string = as<std::string>(offsets[i]);
+      long offset = std::stol(offset_string);
+      reader.VirtualSeek(offset);
+      BamRecord r;
+      if (reader.GetNext(r)) {
+
+        std::string read = r.Sequence(orientation, true, true);
+        std::string ref = fasta.ReferenceSubsequence(r, orientation, true, true);
+        auto trimmed = _sampleAndTrimSeqs(read, ref, trimToLength);
+        auto new_read = std::move(trimmed.first);
+        auto new_ref = std::move(trimmed.second);
+
+        /* This is a bit brutal, but I think the nicer looking
+           Rcpp sugar versions would involve more memory allocations */
+        auto full_ref = createFactorFromSeqString(new_ref);
+        auto curBP = IntegerVector(full_ref.size() - 1);
+        auto prevBP = IntegerVector(full_ref.size() - 1);
+        for(int i=0; i < (full_ref.size() -1); i++) {
+          curBP[i] = full_ref[ i + 1];
+          prevBP[i] = full_ref[i];
+        }
+        curBP.attr("class") = "factor";
+        prevBP.attr("class") = "factor";
+        curBP.attr("levels") = full_ref.attr("levels");
+        prevBP.attr("levels") = full_ref.attr("levels");
+        auto ctx = createDinucleotidFactorFromSeqs(prevBP, curBP);
+
+        auto df =  List::create(Named("prevBP") = prevBP,
+                                Named("curBP") = curBP,
+                                Named("ctx") = ctx);
+
+        // Now let's load the SNRs if applicable
+        if (r.HasSignalToNoise()) {
+            auto snrs = r.SignalToNoise();
+            df["snrA"] = NumericVector(ctx.size(), snrs[0]);            
+            df["snrC"] = NumericVector(ctx.size(), snrs[1]);            
+            df["snrG"] = NumericVector(ctx.size(), snrs[2]);
+            df["snrT"] = NumericVector(ctx.size(), snrs[3]);
+          }
+          df.attr("class") = "data.frame";
+          df.attr("row.names") = seq_len(ctx.size());
+          auto trimEnds = [](std::string val) {return val.substr(1, val.length() -2);};
+          auto val = List::create(Named("covars") = df,
+                                  Named("outcome") = CharacterVector(trimEnds(new_read)),
+                                  Named("model") = CharacterVector(trimEnds(new_ref)));
+        results[i] = val;
+        continue;
+      } else{
+        throw new std::out_of_range("No BAM record found at the given offset");
+      }
+    }
+    return results;
+  } catch (std::exception &ex) {
+    forward_exception_to_r(ex);
+  }
+  return List::create(Named("test") = 2);
+}
+
+
+
+
 
 
 

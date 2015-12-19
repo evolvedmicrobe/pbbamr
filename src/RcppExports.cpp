@@ -32,3 +32,17 @@ BEGIN_RCPP
     return __result;
 END_RCPP
 }
+// loadHMMfromBAM
+List loadHMMfromBAM(CharacterVector offsets, std::string bamName, std::string indexedFastaName, int trimToLength);
+RcppExport SEXP pbbamr_loadHMMfromBAM(SEXP offsetsSEXP, SEXP bamNameSEXP, SEXP indexedFastaNameSEXP, SEXP trimToLengthSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< CharacterVector >::type offsets(offsetsSEXP);
+    Rcpp::traits::input_parameter< std::string >::type bamName(bamNameSEXP);
+    Rcpp::traits::input_parameter< std::string >::type indexedFastaName(indexedFastaNameSEXP);
+    Rcpp::traits::input_parameter< int >::type trimToLength(trimToLengthSEXP);
+    __result = Rcpp::wrap(loadHMMfromBAM(offsets, bamName, indexedFastaName, trimToLength));
+    return __result;
+END_RCPP
+}
