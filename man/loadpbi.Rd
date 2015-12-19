@@ -21,7 +21,7 @@ number of attributes present, it will either load just the basic data, or option
 the mapping and barcode data.
 }
 \details{
-The original BAM file can also be read to gather additional covariates such as the SNR, read quality 
+The original BAM file can also be read to gather additional covariates such as the SNR, read quality
 and number of passes, though this may take longer.
 }
 \examples{

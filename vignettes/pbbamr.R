@@ -1,34 +1,4 @@
----
-title: "Examining PacBio data with pbbamr"
-author: "Nigel Delaney"
-date: '`r Sys.Date()`'
-output: rmarkdown::html_vignette
-vignette: >
-  %\VignetteIndexEntry{Examining Data}
-  %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteEncoding{UTF-8}
----
-
-This package examines aligned data in the PacBio BAM format.  It can be used to 
-investigate the BAM pbi index file to get bulk alignment statistics, or can be
-used for deeper analysis of individual alignments by directly accessing
-the BAM file alignments.
-
-## Package installation
-
-```
-install.packages("devtools")
-library(devtools)
-install_github("evolvedmicrobe/pbbamr")
-```
-
-## Loading and plotting pbi files
-
-Simply pass a BAM file name to the `loadpbi` function (the pbi file must exist
-as the filename + ".pbi") which will return a data frame with the information
-available in the pbi file.
-
-```{r, echo=TRUE, results='asis'}
+## ---- echo=TRUE, results='asis'------------------------------------------
 library(pbbamr)
 # For this example, we will load some sample data
 # distributed with the package.
@@ -39,51 +9,21 @@ ind = loadpbi(bamname)
 
 # Show the first 3 rows (transposed, note kable just formats)
 knitr::kable(t(ind[1:3,]))
-```
 
-The fields in the data frame closely correspond to the [published documentation
-of the
-format](http://pacbiofileformats.readthedocs.org/en/latest/PacBioBamIndex.html).
-Note that because R does cannot represent long integers, we store the file offset
-as a string (which is a detail you can ignore).
-
-
-The PacBio index table can tell you a lot about the data.  For example we plot a
-distribution of alignment length and accuracy below.
-
-**Alignment Length Distributions**
-
-```{r, echo=TRUE, results='asis'}
+## ---- echo=TRUE, results='asis'------------------------------------------
 library(ggplot2)
 # We can calculate the length of the alignment on the reference as 
 # the template end minus the template start of that alignment.
 ind$alnLength = ind$tend - ind$tstart
 ggplot(ind, aes(x=alnLength)) + geom_density(fill="blue") + theme_bw() +
   labs(x="Alignment Length on Reference")
-```
 
-**Accuracy Distribution**
-
-Accuracy is a metric with many possible definitions.  Below, we will examine an
-error rate defined as the total number of errors per reference basepair.
-
-```{r, echo=TRUE, results='asis'}
+## ---- echo=TRUE, results='asis'------------------------------------------
 ind$errorRate = (ind$mismatches + ind$inserts + ind$dels) / ind$alnLength 
 ggplot(ind, aes(x=errorRate)) + geom_density(fill="cyan") + theme_bw() +
   labs(x="Error Rate")
-```
 
-
-## Examining Individual Alignments
-
-Given an index file, we may want to drill down and examine the individul
-alignments.  `pbbamr` allows you to do this if you have an indexed fasta file of
-the reference available.  The function `loadDataAtOffsets` will take a list of
-file offsets (from the pbi index file) and return each BAM record specified by a
-file offset as a data frame with rows corresponding to alignment positions and
-columns as read or reference bases.
-
-```{r, echo=TRUE, results='hold'}
+## ---- echo=TRUE, results='hold'------------------------------------------
 # Get the name of the sample indexed FASTA file
 fastaname = system.file("extdata", "lambdaNEB.fa", package="pbbamr")
 
@@ -96,15 +36,8 @@ allAlns = loadDataAtOffsets(ind$offset[1], bamname, fastaname)
 # in this case let's just look at the first
 aln = allAlns[[1]]
 head(aln[1:6,])
-```
 
-Each alignment (or BAM record) is returned as a data frame element of a list. 
-With this, one could combine all of these into one super alignment to gain
-statistics.  For example, let's validate that the number of insertions in the
-alignments matches the pbi file.
-
-
-```{r, echo=TRUE, collapse=TRUE, results='hold'}
+## ---- echo=TRUE, collapse=TRUE, results='hold'---------------------------
 # Get all the alignments for all records in the index
 allAlns = loadDataAtOffsets(ind$offset, bamname, fastaname)
 # let's combine the individual alignments into one big data frame
@@ -113,14 +46,8 @@ alns = do.call(rbind, allAlns)
 insert_cnt = sum(alns$ref=="-")
 # Do they match the pbi file?
 insert_cnt == sum(ind$inserts)
-```
 
-More usefully though, one may want to perform some operation over a set of 
-alignments to gather some summary statistics from them.  For example, let's 
-write a cheesy function to figure out for single deletion events which basepair
-was deleted and which basepair followed that deletion.
-
-```{r, echo=TRUE, results='asis'}
+## ---- echo=TRUE, results='asis'------------------------------------------
 # First let's write a function to find single deletion events, and report 
 # the deleted base and following base.
 findSingleDeletions <- function(aln) {
@@ -153,7 +80,4 @@ ggplot(agg, aes(x=AfterDeletion, y=Deleted, fill=Count)) + geom_tile() +
   theme_bw(base_size=10)  + 
   labs(title="Anyone think G/C homopolymers\nwill be hard in consensus?",
        x="Base After Deletion", y="Deleted Base")
-```  
-  
-    
 
