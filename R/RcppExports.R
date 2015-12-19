@@ -7,7 +7,7 @@
 #' number of attributes present, it will either load just the basic data, or optionally
 #' the mapping and barcode data.
 #'
-#' The original BAM file can also be read to gather additional covariates such as the SNR, read quality 
+#' The original BAM file can also be read to gather additional covariates such as the SNR, read quality
 #' and number of passes, though this may take longer.
 #'
 #' @param filename The BAM file name (without .pbi)
@@ -37,7 +37,7 @@ loadDataAtOffsets <- function(offsets, bamName, indexedFastaName) {
 #' @param offsets The virtual file offsets to retrieve BAM records from (can be obtained from the index file based on loadpbi).
 #' @param bamName The BAM file name to grab
 #' @param indexedFastaName The name of the indexed fasta file this should come from.
-#' @param trimToLength How much should we subsample the alignments? 
+#' @param trimToLength How much should we subsample the alignments?
 #'
 #' @return Returns a list of phase2datasets as data frames.
 #' @export
