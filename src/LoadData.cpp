@@ -88,7 +88,7 @@ std::pair<std::string, std::string> _sampleAndTrimSeqs(const std::string& read,
   if (trimToLength !=0 && n > trimToLength) {
       auto maxRow = n - trimToLength + 1;
       startRow = static_cast<int>(maxRow * R::runif(0,1));
-      endRow  = std::max(n, startRow + trimToLength);
+      endRow  = std::min(n, startRow + trimToLength);
   } else {
     startRow =0;
     endRow = n;
