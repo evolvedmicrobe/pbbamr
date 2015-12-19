@@ -11,7 +11,8 @@ Description: This R package wraps both the pbbam and htslib libraries, providing
 License: MIT
 LazyData: TRUE
 LinkingTo: Rcpp
-Imports: 
+Depends: R (>= 3.1.0), knitr
+Imports:
     Rcpp
 RoxygenNote: 5.0.1
 Suggests: knitr,
