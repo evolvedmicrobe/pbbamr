@@ -390,7 +390,7 @@ List loadHMMfromBAM(CharacterVector offsets,
         auto full_ref = createFactorFromSeqString(new_ref);
         auto curBP = IntegerVector(full_ref.size() - 2);
         auto prevBP = IntegerVector(full_ref.size() - 2);
-        for(int i = 1; i < (full_ref.size() -1); i++) {
+        for(int i = 0; i < (full_ref.size() - 2); i++) {
           curBP[i] = full_ref[ i + 1];
           prevBP[i] = full_ref[i];
         }
