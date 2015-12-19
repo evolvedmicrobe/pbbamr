@@ -381,11 +381,16 @@ List loadHMMfromBAM(CharacterVector offsets,
         boost::erase_all(new_read, "-");
         
         /* This is a bit brutal, but I think the nicer looking
-           Rcpp sugar versions would involve more memory allocations */        
+           Rcpp sugar versions would involve more memory allocations.
+
+           Note, since I am only using a dinucleotide context, I 
+           don't need to cut off the end, but I will just in 
+           case I want to make this trinucleotide later.
+        */        
         auto full_ref = createFactorFromSeqString(new_ref);
-        auto curBP = IntegerVector(full_ref.size() - 1);
-        auto prevBP = IntegerVector(full_ref.size() - 1);
-        for(int i=0; i < (full_ref.size() -1); i++) {
+        auto curBP = IntegerVector(full_ref.size() - 2);
+        auto prevBP = IntegerVector(full_ref.size() - 2);
+        for(int i = 1; i < (full_ref.size() -1); i++) {
           curBP[i] = full_ref[ i + 1];
           prevBP[i] = full_ref[i];
         }
