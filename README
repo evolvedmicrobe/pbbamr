@@ -6,7 +6,7 @@ libraries:
 
 * Boost (1.58)
 * HTSLIB (P4, 12/10/2015)
-* PBBAM (711d42a034f841e6314c1ecf4c2a82ec7f53359b)
+* PBBAM (415cb1a1bcad853978ed37eda3fd4a23aed8e490)
 
 Directly copying the files was done to enable a cleaner build, but none of the
 files were edited and can likely be recopied using the following set of
@@ -22,8 +22,9 @@ such.
 #Move pbbam over
 mkdir ~/git/pbbamr/src/pbbam/
 cp -r ~/git/pbbam/src/ ~/git/pbbamr/src/pbbam/
-cp -r ~/git/pbbam/include/pbbam ~/git/pbbamr/inst/include/pbbam
-
+cp -r ~/git/pbbam/include/pbbam ~/git/pbbamr/inst/include/pbbam/pbbam
+# ditch the swig stuff.
+rm -r ~/git/pbbamr/src/pbbam/swig
 
 ## Move htslib package over 
 cd /Users/nigel/p4/ndelaney_Nigels-MacBook-Pro_1663/depot/software/smrtanalysis/bioinformatics/staging/PostPrimary/
