@@ -35,8 +35,6 @@ library(pbbamr)
 bamname = system.file("extdata", "bam_mapping_1.bam", package="pbbamr")
 # Load the index table.
 ind = loadpbi(bamname)
-
-
 # Show the first 3 rows (transposed, note kable just formats)
 knitr::kable(t(ind[1:3,]))
 ```
@@ -86,10 +84,6 @@ columns as read or reference bases.
 ```{r, echo=TRUE, results='hold'}
 # Get the name of the sample indexed FASTA file
 fastaname = system.file("extdata", "lambdaNEB.fa", package="pbbamr")
-
-
-loadHMMfromBAM(ind$offset, bamname, fastaname)
-
 # let's just grab and plot one alignment.
 allAlns = loadDataAtOffsets(ind$offset[1], bamname, fastaname)
 # The alignments are returned as a list of data frames
