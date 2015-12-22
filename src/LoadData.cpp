@@ -379,14 +379,14 @@ List loadHMMfromBAM(CharacterVector offsets,
         // Trim out gaps
         boost::erase_all(new_ref, "-");
         boost::erase_all(new_read, "-");
-        
+
         /* This is a bit brutal, but I think the nicer looking
            Rcpp sugar versions would involve more memory allocations.
 
-           Note, since I am only using a dinucleotide context, I 
-           don't need to cut off the end, but I will just in 
+           Note, since I am only using a dinucleotide context, I
+           don't need to cut off the end, but I will just in
            case I want to make this trinucleotide later.
-        */        
+        */
         auto full_ref = createFactorFromSeqString(new_ref);
         auto curBP = IntegerVector(full_ref.size() - 2);
         auto prevBP = IntegerVector(full_ref.size() - 2);
@@ -401,8 +401,8 @@ List loadHMMfromBAM(CharacterVector offsets,
         auto ctx = createDinucleotidFactorFromSeqs(prevBP, curBP);
 
         auto df =  List::create(Named("prevBP") = prevBP,
-                                Named("curBP") = curBP,
-                                Named("ctx") = ctx);
+                                Named("currBP") = curBP,
+                                Named("CTX") = ctx);
 
         // Now let's load the SNRs if applicable
         if (r.HasSignalToNoise()) {
