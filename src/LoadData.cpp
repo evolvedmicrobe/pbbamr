@@ -14,6 +14,13 @@
 using namespace Rcpp;
 using namespace PacBio::BAM;
 
+
+char getRandomBase() {
+  char bases[] = {'A', 'C', 'G', 'T'};
+  int position = floor(4 * runif(1))[0];
+  return bases[position];
+}
+
 /* Convert the string into a factor variable, which is really just an integer
    vector with assigned levels.
 */
@@ -41,12 +48,15 @@ IntegerVector createFactorFromSeqString(const std::string& seq) {
       case '-':
         v[i] = 5;
         break;
+    case 'N':
+    case 'n':
+        v[i] = 6;
       default:
-        throw new std::out_of_range("Character was not an A, C, G, T or -");
+        throw new std::out_of_range("Character was not an A, C, G, T, N or -");
       }
   }
   v.attr("class") = "factor";
-  v.attr("levels") = CharacterVector::create("A", "C", "G", "T", "-");
+  v.attr("levels") = CharacterVector::create("A", "C", "G", "T", "-", "N");
   return v;
 }
 
@@ -70,6 +80,41 @@ IntegerVector createDinucleotidFactorFromSeqs(const IntegerVector& prevBP,
   ctx.attr("class") = "factor";
   ctx.attr("levels") = CharacterVector::create("AA", "CC", "GG", "TT", "NA", "NC", "NG", "NT");
   return ctx;
+}
+
+
+/* Given an aligned read and reference pair, we will generate 
+   breakpoints to divide the pairing into a smaller window everytime we 
+   see a window of at least newWindowSize
+*/
+std::vector<size_t> _findBreakPoints(const std::string& read,
+                                     const std::string& ref,
+                                     int newWindowSize) {
+
+  if (read.length() != ref.length()) {
+    throw std::runtime_error("Read and reference had different lengths!");
+  }
+  std::vector<size_t> breaks;
+
+  // Sample down if needed
+  auto n = read.length();
+  int lastBreak = -1;
+  bool lastBaseMatch = false;
+  // Start a new window everytime we find two bases that perfectly match every newWindowSize
+  for(int i=0; i < n; i++) {
+    bool curBaseMatch = (read[i] != '-' && ref[i] == read[i]) ? true : false;
+    if (curBaseMatch && lastBaseMatch &&
+        (lastBreak > 0 || // we are at the start
+        (i - lastBreak) >= newWindowSize))
+    {
+      lastBreak = i;
+      breaks.push_back(i);
+      i += newWindowSize - 1;
+    } else { 
+      lastBaseMatch = curBaseMatch;
+    }
+  }
+  return breaks;
 }
 
 /* Given an aligned read and reference pair, we will subsample down to
@@ -147,7 +192,7 @@ std::pair<std::string, std::string> _sampleAndTrimSeqs(const std::string& read,
 //' @examples loadpbi("~git/pbbam/tests/data/dataset/bam_mapping_1.bam.pbi")
 // [[Rcpp::export]]
 DataFrame loadpbi(std::string filename,
-                  bool loadSNR= false,
+                  bool loadSNR = false,
                   bool loadNumPasses = false,
                   bool loadRQ = false
                   ) {
@@ -432,8 +477,111 @@ List loadHMMfromBAM(CharacterVector offsets,
 }
 
 
+  List _generatePairFromString(const std::string& read, const std::string& ref, size_t brk1, size_t brk2) {
+    // we should always have a break occur at a position with a matching base before, so we will grab that
+    if (brk1 < 1) {
+      throw new std::runtime_error("Break specified before 1! Shouldn't be possible as we require two matching bases at each breakpoint");
+    }
+    auto len = brk2 - brk1;
+    auto new_read = read.substr(brk1, len);
+    auto new_ref = ref.substr(brk1, len);
+    // Trim out gaps
+    boost::erase_all(new_ref, "-");
+    boost::erase_all(new_read, "-");
+
+  
+    auto completeString = ref.substr(brk1 - 1, len + 1);
+    boost::erase_all(completeString, "-");
+    auto full_ref = createFactorFromSeqString(completeString);
+    auto curBP = IntegerVector(full_ref.size() - 1);
+    auto prevBP = IntegerVector(full_ref.size() - 1);
+    for(int i = 0; i < (full_ref.size() - 1); i++) {
+      curBP[i] = full_ref[i + 1];
+      prevBP[i] = full_ref[i];
+    }
+    curBP.attr("class") = "factor";
+    prevBP.attr("class") = "factor";
+    curBP.attr("levels") = full_ref.attr("levels");
+    prevBP.attr("levels") = full_ref.attr("levels");
+    auto ctx = createDinucleotidFactorFromSeqs(prevBP, curBP);
+
+    auto df =  List::create(Named("prevBP") = prevBP,
+                            Named("currBP") = curBP,
+                            Named("CTX") = ctx);
+   
+    df.attr("class") = "data.frame";
+    df.attr("row.names") = seq_len(ctx.size());
+    auto val = List::create(Named("covars") = df,
+                            Named("outcome") = CharacterVector(new_read),
+                            Named("model") = CharacterVector(new_ref));
+    return val;
+  } 
 
 
+//' Load BAM alignment from a single ZMW as a list of list for the HMM model.
+//'
+//' @param offsets The virtual file offsets to retrieve BAM records from (can be obtained from the index file based on loadpbi).
+//' @param bamName The BAM file name to grab
+//' @param indexedFastaName The name of the indexed fasta file this should come from.
+//' @param windowBreakSize We generate a new "window" every time 2 basepairs are matching in a particular gap.
+//' @param minSize What is the minimum window size necessary for return, if the window at the end is less than this, we drop it. (NOT CURRENTLY USED).
+//' @return Returns a list of phase2datasets as data frames.
+//' @export
+// [[Rcpp::export]]
+List loadSingleZmwHMMfromBAM(CharacterVector offsets,
+                             std::string bamName,
+                             std::string indexedFastaName,
+                             int windowBreakSize = 140,
+                             int minSize = 50 ) {
+  try {
+
+    if (windowBreakSize < minSize) {
+      Rcout << "windowBreakSize must be >= minSize " << std::endl;
+      return NULL;
+    }
+
+    IndexedFastaReader fasta(indexedFastaName);
+    BamReader reader(bamName);
+
+    // Always get reads in native orientation.
+    auto orientation = Orientation::NATIVE;
+    int n = offsets.size();
+    if (n != 1) {
+      Rcout << "You must specify exactly one offset" << std::endl;
+    }
+    // back convert from string to long.
+    std::string offset_string = as<std::string>(offsets[0]);
+    long offset = std::stol(offset_string);
+    reader.VirtualSeek(offset);
+    BamRecord r;
+    if (reader.GetNext(r)) {
+        std::string read = r.Sequence(orientation, true, true);
+        std::string ref = fasta.ReferenceSubsequence(r, orientation, true, true);
+        auto breaks = _findBreakPoints(read, ref, windowBreakSize);
+        if (breaks.size() ==0) {
+          throw new std::runtime_error("Could not find any break points in read pair.");
+        }
+        else {
+          List results(breaks.size() - 1);
+          for(int i=0; i < breaks.size() -1; i++) {
+            auto temp = _generatePairFromString(read, ref, breaks[i], breaks[i+1]);
+            results[i] = temp;
+          }
+          return results;
+        }
+    }
+    else
+    {
+        throw new std::out_of_range("No BAM record found at the given offset");
+    }
+    } catch (std::exception &ex) {
+    forward_exception_to_r(ex);
+  }
+  return NULL;
+
+  }
+
+  
 
 
 

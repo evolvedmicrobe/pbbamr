@@ -46,3 +46,18 @@ BEGIN_RCPP
     return __result;
 END_RCPP
 }
+// loadSingleZmwHMMfromBAM
+List loadSingleZmwHMMfromBAM(CharacterVector offsets, std::string bamName, std::string indexedFastaName, int windowBreakSize, int minSize);
+RcppExport SEXP pbbamr_loadSingleZmwHMMfromBAM(SEXP offsetsSEXP, SEXP bamNameSEXP, SEXP indexedFastaNameSEXP, SEXP windowBreakSizeSEXP, SEXP minSizeSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< CharacterVector >::type offsets(offsetsSEXP);
+    Rcpp::traits::input_parameter< std::string >::type bamName(bamNameSEXP);
+    Rcpp::traits::input_parameter< std::string >::type indexedFastaName(indexedFastaNameSEXP);
+    Rcpp::traits::input_parameter< int >::type windowBreakSize(windowBreakSizeSEXP);
+    Rcpp::traits::input_parameter< int >::type minSize(minSizeSEXP);
+    __result = Rcpp::wrap(loadSingleZmwHMMfromBAM(offsets, bamName, indexedFastaName, windowBreakSize, minSize));
+    return __result;
+END_RCPP
+}

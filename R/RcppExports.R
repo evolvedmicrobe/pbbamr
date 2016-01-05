@@ -45,3 +45,16 @@ loadHMMfromBAM <- function(offsets, bamName, indexedFastaName, trimToLength = 14
     .Call('pbbamr_loadHMMfromBAM', PACKAGE = 'pbbamr', offsets, bamName, indexedFastaName, trimToLength)
 }
 
+#' Load BAM alignment from a single ZMW as a list of list for the HMM model.
+#'
+#' @param offsets The virtual file offsets to retrieve BAM records from (can be obtained from the index file based on loadpbi).
+#' @param bamName The BAM file name to grab
+#' @param indexedFastaName The name of the indexed fasta file this should come from.
+#' @param windowBreakSize We generate a new "window" every time 2 basepairs are matching in a particular gap.
+#' @param minSize What is the minimum window size necessary for return, if the window at the end is less than this, we drop it. (NOT CURRENTLY USED).
+#' @return Returns a list of phase2datasets as data frames.
+#' @export
+loadSingleZmwHMMfromBAM <- function(offsets, bamName, indexedFastaName, windowBreakSize = 140L, minSize = 50L) {
+    .Call('pbbamr_loadSingleZmwHMMfromBAM', PACKAGE = 'pbbamr', offsets, bamName, indexedFastaName, windowBreakSize, minSize)
+}
+
