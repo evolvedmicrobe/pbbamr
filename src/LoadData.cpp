@@ -64,18 +64,18 @@ IntegerVector createFactorFromSeqString(const std::string& seq) {
 /* Convert two arrays of previous and current basepair into a
    dinucleotide context vector.
 */
-IntegerVector createDinucleotidFactorFromSeqs(const IntegerVector& prevBP,
-                                              const IntegerVector& curBP) {
-  IntegerVector ctx(prevBP.size());
-  for(int i = 0; i < prevBP.size(); i++ ) {
-    auto prv = prevBP[i];
+IntegerVector createDinucleotideFactorFromSeqs(const IntegerVector& curBP,
+                                              const IntegerVector& nextBP) {
+  IntegerVector ctx(curBP.size());
+  for(int i = 0; i < curBP.size(); i++ ) {
+    auto nxt = nextBP[i];
     auto cur = curBP[i];
-    auto offset = prv == cur ? 0 : 4;
+    auto offset = cur == nxt ? 0 : 4;
     // Expensive check that can probably be removed?
-    if ( cur < 0 || cur > 4 || prv <0 || prv > 4) {
+    if ( cur < 0 || cur > 4 || nxt < 0 || nxt > 4) {
         throw std::runtime_error("Can't make context factor with basepairs outside of 0-4");
     }
-    ctx[i] = offset + cur;
+    ctx[i] = offset + nxt;
   }
   ctx.attr("class") = "factor";
   ctx.attr("levels") = CharacterVector::create("AA", "CC", "GG", "TT", "NA", "NC", "NG", "NT");
@@ -83,8 +83,8 @@ IntegerVector createDinucleotidFactorFromSeqs(const IntegerVector& prevBP,
 }
 
 
-/* Given an aligned read and reference pair, we will generate 
-   breakpoints to divide the pairing into a smaller window everytime we 
+/* Given an aligned read and reference pair, we will generate
+   breakpoints to divide the pairing into a smaller window everytime we
    see a window of at least newWindowSize
 */
 std::vector<size_t> _findBreakPoints(const std::string& read,
@@ -110,7 +110,7 @@ std::vector<size_t> _findBreakPoints(const std::string& read,
       lastBreak = i;
       breaks.push_back(i);
       i += newWindowSize - 1;
-    } else { 
+    } else {
       lastBaseMatch = curBaseMatch;
     }
   }
@@ -164,7 +164,9 @@ std::pair<std::string, std::string> _sampleAndTrimSeqs(const std::string& read,
       read[startRow+1] == '-' || ref[startRow+1] == '-' ||
       endRow - startRow < 10) {
     throw new std::runtime_error("Trying to sample reads down wound up with \
-                                  a sequence of size < 10.  Are there a lot of \
+                                  a sequence of size < 10 or an alignment that \
+                                  started/ended with a gap at or immediately \
+                                  adjacent to the end.  Are there a lot of \
                                   gaps or small sequences in this data?");
   }
 
@@ -417,6 +419,8 @@ List loadHMMfromBAM(CharacterVector offsets,
 
         std::string read = r.Sequence(orientation, true, true);
         std::string ref = fasta.ReferenceSubsequence(r, orientation, true, true);
+        // These should match and the first two and last two positions of the
+        // alignment (no gaps at start or end).
         auto trimmed = _sampleAndTrimSeqs(read, ref, trimToLength);
         auto new_read = std::move(trimmed.first);
         auto new_ref = std::move(trimmed.second);
@@ -433,19 +437,20 @@ List loadHMMfromBAM(CharacterVector offsets,
            case I want to make this trinucleotide later.
         */
         auto full_ref = createFactorFromSeqString(new_ref);
-        auto curBP = IntegerVector(full_ref.size() - 2);
-        auto prevBP = IntegerVector(full_ref.size() - 2);
-        for(int i = 0; i < (full_ref.size() - 2); i++) {
-          curBP[i] = full_ref[ i + 1];
-          prevBP[i] = full_ref[i];
+        size_t trimmed_size = full_ref.size() - 1;
+        auto curBP = IntegerVector(trimmed_size);
+        auto nextBP = IntegerVector(trimmed_size);
+        for(int i = 0; i < trimmed_size; i++) {
+          curBP[i] = full_ref[i];
+          nextBP[i] = full_ref[i+1];
         }
         curBP.attr("class") = "factor";
-        prevBP.attr("class") = "factor";
+        nextBP.attr("class") = "factor";
         curBP.attr("levels") = full_ref.attr("levels");
-        prevBP.attr("levels") = full_ref.attr("levels");
-        auto ctx = createDinucleotidFactorFromSeqs(prevBP, curBP);
+        nextBP.attr("levels") = full_ref.attr("levels");
+        auto ctx = createDinucleotideFactorFromSeqs(curBP, nextBP);
 
-        auto df =  List::create(Named("prevBP") = prevBP,
+        auto df =  List::create(Named("nextBP") = nextBP,
                                 Named("currBP") = curBP,
                                 Named("CTX") = ctx);
 
@@ -459,7 +464,7 @@ List loadHMMfromBAM(CharacterVector offsets,
           }
           df.attr("class") = "data.frame";
           df.attr("row.names") = seq_len(ctx.size());
-          auto trimEnds = [](std::string val) {return val.substr(1, val.length() -2);};
+          auto trimEnds = [](std::string val) {return val.substr(0, val.length() -1);};
           auto val = List::create(Named("covars") = df,
                                   Named("outcome") = CharacterVector(trimEnds(new_read)),
                                   Named("model") = CharacterVector(trimEnds(new_ref)));
@@ -489,33 +494,33 @@ List loadHMMfromBAM(CharacterVector offsets,
     boost::erase_all(new_ref, "-");
     boost::erase_all(new_read, "-");
 
-  
-    auto completeString = ref.substr(brk1 - 1, len + 1);
+
+    auto completeString = ref.substr(brk1, len + 1);
     boost::erase_all(completeString, "-");
     auto full_ref = createFactorFromSeqString(completeString);
     auto curBP = IntegerVector(full_ref.size() - 1);
-    auto prevBP = IntegerVector(full_ref.size() - 1);
+    auto nextBP = IntegerVector(full_ref.size() - 1);
     for(int i = 0; i < (full_ref.size() - 1); i++) {
-      curBP[i] = full_ref[i + 1];
-      prevBP[i] = full_ref[i];
+      curBP[i] = full_ref[i];
+      nextBP[i] = full_ref[i + 1];
     }
     curBP.attr("class") = "factor";
-    prevBP.attr("class") = "factor";
+    nextBP.attr("class") = "factor";
     curBP.attr("levels") = full_ref.attr("levels");
-    prevBP.attr("levels") = full_ref.attr("levels");
-    auto ctx = createDinucleotidFactorFromSeqs(prevBP, curBP);
+    nextBP.attr("levels") = full_ref.attr("levels");
+    auto ctx = createDinucleotideFactorFromSeqs(curBP, nextBP);
 
-    auto df =  List::create(Named("prevBP") = prevBP,
+    auto df =  List::create(Named("nextBP") = nextBP,
                             Named("currBP") = curBP,
                             Named("CTX") = ctx);
-   
+
     df.attr("class") = "data.frame";
     df.attr("row.names") = seq_len(ctx.size());
     auto val = List::create(Named("covars") = df,
                             Named("outcome") = CharacterVector(new_read),
                             Named("model") = CharacterVector(new_ref));
     return val;
-  } 
+  }
 
 
 //' Load BAM alignment from a single ZMW as a list of list for the HMM model.
@@ -581,7 +586,7 @@ List loadSingleZmwHMMfromBAM(CharacterVector offsets,
 
   }
 
-  
+
 
 
 
