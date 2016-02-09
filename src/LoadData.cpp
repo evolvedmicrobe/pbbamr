@@ -363,6 +363,25 @@ List loadDataAtOffsets(CharacterVector offsets, std::string bamName, std::string
 
         DataFrame df = DataFrame::create(Named("read") = createFactorFromSeqString(seq),
                                          Named("ref") = createFactorFromSeqString(ref));
+
+        if (r.HasIPD()) {
+            auto ipds = r.IPD(Orientation::NATIVE, true, true).Data();
+            auto intarr = IntegerVector(ipds.size());
+            for(int i = 0; i < ipds.size(); i++) {
+              intarr[i] = ipds[i];
+            }
+            df["ipd"] = intarr;
+        }
+
+        if (r.HasPulseWidth()) {
+            auto pws = r.PulseWidth(Orientation::NATIVE, true, true).Data();
+            auto intarr = IntegerVector(pws.size());
+            for(int i = 0; i < pws.size(); i++) {
+              intarr[i] = pws[i];
+            }
+            df["pw"] = intarr;
+        }
+
         results[i] = df;
         continue;
       } else{
