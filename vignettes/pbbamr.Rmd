@@ -19,8 +19,13 @@ the BAM file alignments.
 ```
 install.packages("devtools")
 library(devtools)
-install_github("evolvedmicrobe/pbbamr")
+install_github("PacificBiosciences/pbbamr")
 ```
+Note that on some PacBio machines, a configuration conflict may lead to the
+message `Problem with the SSL CA cert (path? access rights?)`.  If this appears,
+simply run the following command before those given above:
+
+    httr::set_config( httr::config( ssl_verifypeer = 0L ) )
 
 ## Loading and plotting pbi files
 
