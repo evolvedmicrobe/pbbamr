@@ -331,7 +331,7 @@ DataFrame loadpbi(std::string filename,
 //' @param bamName The BAM file name to grab
 //' @param indexedFastaName The name of the indexed fasta file this should come from.
 //'
-//' @return Returns a list of alignments as data frames.
+//' @return Returns a list of alignments as data frames.  If the IPD and Pulse Width are available, they will be columns in the returned data as well.
 //' @export
 // [[Rcpp::export]]
 List loadDataAtOffsets(CharacterVector offsets, std::string bamName, std::string indexedFastaName) {
