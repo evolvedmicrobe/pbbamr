@@ -7,9 +7,14 @@ An R library to view and examine PacBio BAM format files.
 ```
 install.packages("devtools")
 library(devtools)
-install_github("evolvedmicrobe/pbbamr", build_vignettes = TRUE)
+install_github("PacificBiosciences/pbbamr", build_vignettes = TRUE)
 ```
+On some machines, a configuration conflict may lead to the
+message `Problem with the SSL CA cert (path? access rights?)`.  If this appears,
+simply run the following command before those given above:
 
+    httr::set_config( httr::config( ssl_verifypeer = 0L ) )
+    
 ##How to use
 
 ```

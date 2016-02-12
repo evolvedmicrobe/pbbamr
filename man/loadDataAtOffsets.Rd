@@ -14,7 +14,7 @@ loadDataAtOffsets(offsets, bamName, indexedFastaName)
 \item{indexedFastaName}{The name of the indexed fasta file this should come from.}
 }
 \value{
-Returns a list of alignments as data frames.
+Returns a list of alignments as data frames.  If the IPD and Pulse Width are available, they will be columns in the returned data as well.
 }
 \description{
 Load BAM alignments as a list of data frames.
