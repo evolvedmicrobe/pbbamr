@@ -1024,10 +1024,10 @@ Frames BamRecord::FetchFrames(const string& tagName,
                               const bool exciseSoftClips) const
 {
     Frames frames = FetchFramesRaw(tagName);
-
-    // reverse, if needed
+     
+    // reverse, if needed so that order matches CIGAR
     internal::MaybeReverseFrames(impl_.IsReverseStrand(),
-                                 orientation,
+                                 Orientation::GENOMIC,
                                  frames);
 
     // clip / gapify
@@ -1035,6 +1035,11 @@ Frames BamRecord::FetchFrames(const string& tagName,
                                       aligned,
                                       exciseSoftClips,
                                       frames);
+    // Now flip back if needed
+    bool shouldFlip = impl_.IsReverseStrand() && Orientation::NATIVE == orientation;
+    if (shouldFlip) {
+        std::reverse(frames.begin(), frames.end());
+    }    
 
     return frames;
 }
