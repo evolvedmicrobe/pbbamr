@@ -381,7 +381,8 @@ List loadDataAtOffsets(CharacterVector offsets, std::string bamName, std::string
             }
             df["pw"] = intarr;
         }
-
+        df.attr("class") = "data.frame";
+        df.attr("row.names") = seq_len(seq.size());
         results[i] = df;
         continue;
       } else{
