@@ -1,6 +1,7 @@
 #pbbamr
 
-An R library to view and examine PacBio BAM format files.
+An R library to view and examine PacBio BAM format files.  Cannot be used on 
+windows computers.
 
 ##Installation
 
