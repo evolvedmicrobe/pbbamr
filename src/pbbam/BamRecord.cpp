@@ -254,6 +254,52 @@ static
 void MaybeClipAndGapifyFrames(const BamRecordImpl& impl,
                               const bool aligned,
                               const bool exciseSoftClips,
+                              vector<uint16_t>& array)
+{
+    if (impl.IsMapped() && (aligned || exciseSoftClips)) {
+        
+        auto data = std::move(array); // we're going to put it back
+        size_t frameIndex = 0;
+        const auto cigar = impl.CigarData();
+        
+        auto cigarIter = cigar.cbegin();
+        auto cigarEnd  = cigar.cend();
+        for (; cigarIter != cigarEnd; ++cigarIter) {
+            const auto op = (*cigarIter);
+            const auto type = op.Type();
+            
+            // do nothing for hard clips
+            if (type != CigarOperationType::HARD_CLIP) {
+                const auto opLength = op.Length();
+                
+                // maybe remove soft clips
+                if (type == CigarOperationType::SOFT_CLIP && exciseSoftClips)
+                    data.erase(data.begin() + frameIndex, data.begin() + frameIndex + opLength);
+                
+                // for non-clipping operations
+                else {
+                    
+                    // maybe add gaps/padding
+                    if (aligned) {
+                        if (type == CigarOperationType::DELETION || type == CigarOperationType::PADDING) {
+                            data.reserve(data.size() + opLength);
+                            data.insert(data.begin() + frameIndex, opLength, 0);
+                        }
+                    }
+                    
+                    // update index
+                    frameIndex += opLength;
+                }
+            }
+        }
+        array = std::move(data);
+    }
+}
+
+static
+void MaybeClipAndGapifyFrames(const BamRecordImpl& impl,
+                              const bool aligned,
+                              const bool exciseSoftClips,
                               Frames& frames)
 {
     if (impl.IsMapped() && (aligned || exciseSoftClips)) {
@@ -1045,7 +1091,9 @@ Frames BamRecord::FetchFrames(const string& tagName,
 }
 
 vector<float> BamRecord::FetchPhotons(const string& tagName,
-                                      const Orientation orientation) const
+                                      const Orientation orientation,
+                                      const bool aligned,
+                                      const bool exciseSoftClips) const
 {
     const Tag& frameTag = impl_.TagValue(tagName);
     if (frameTag.IsNull())
@@ -1057,9 +1105,18 @@ vector<float> BamRecord::FetchPhotons(const string& tagName,
 
     // reverse, if needed
     internal::MaybeReverseFrames(impl_.IsReverseStrand(),
-                                 orientation,
+                                 Orientation::GENOMIC,
                                  &data);
-
+    // clip / gapify
+    internal::MaybeClipAndGapifyFrames(impl_,
+                                       aligned,
+                                       exciseSoftClips,
+                                       data);
+    // Now flip back if needed
+    bool shouldFlip = impl_.IsReverseStrand() && Orientation::NATIVE == orientation;
+    if (shouldFlip) {
+        std::reverse(data.begin(), data.end());
+    }
     vector<float> photons;
     photons.reserve(data.size());
 
@@ -1542,9 +1599,12 @@ BamRecord& BamRecord::Pkmean(const std::vector<uint16_t>& encodedPhotons)
     return *this;
 }
 
-std::vector<float> BamRecord::Pkmid(Orientation orientation) const
+std::vector<float> BamRecord::Pkmid(Orientation orientation,
+                                    bool aligned,
+                                    bool exciseSoftClips) const
 {
-    return FetchPhotons(internal::tagName_pkmid, orientation);
+    return FetchPhotons(internal::tagName_pkmid, orientation,
+                        aligned, exciseSoftClips);
 }
 
 BamRecord& BamRecord::Pkmid(const std::vector<float>& photons)

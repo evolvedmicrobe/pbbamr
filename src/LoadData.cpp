@@ -381,6 +381,19 @@ List loadDataAtOffsets(CharacterVector offsets, std::string bamName, std::string
             }
             df["pw"] = intarr;
         }
+
+        if (r.HasSignalToNoise()) {
+          auto snrs = r.SignalToNoise();
+          df["snrA"] = rep(snrs[0], seq.size());
+          df["snrC"] = rep(snrs[1], seq.size());
+          df["snrG"] = rep(snrs[2], seq.size());
+          df["snrT"] = rep(snrs[3], seq.size());
+        }
+
+        if(r.HasPkmid()) {
+          df["pkmid"] = r.Pkmid(Orientation::NATIVE, true, true);
+        }
+
         df.attr("class") = "data.frame";
         df.attr("row.names") = seq_len(seq.size());
         results[i] = df;

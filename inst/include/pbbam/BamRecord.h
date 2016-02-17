@@ -635,11 +635,20 @@ public:
     std::vector<float> Pkmean(Orientation orientation = Orientation::NATIVE) const;
 
     /// \brief Fetches this record's Pkmid values ("pm" tag).
+    /// \note If \p aligned is true, and gaps/padding need to be inserted, the
+    ///       new frames will have a value of 0;
     ///
+    /// \param[in] orientation      Orientation of output.
+    /// \param[in] aligned          if true, gaps/padding will be inserted, per
+    ///                             Cigar info.
+    /// \param[in] exciseSoftClips  if true, any soft-clipped positions will be
+    ///                             removed from query ends
     /// \param[in] orientation     Orientation of output.
     /// \returns Pkmid as vector<float> object
     ///
-    std::vector<float> Pkmid(Orientation orientation = Orientation::NATIVE) const;
+    std::vector<float> Pkmid(Orientation orientation = Orientation::NATIVE,
+                                  bool aligned = false,
+                                  bool exciseSoftClips = false) const;
 
     /// \brief Fetches this record's PreBaseFrames aka IPD values ("ip" tag).
     ///
@@ -1133,7 +1142,9 @@ private:
 private:
     /// \internal
     std::vector<float> FetchPhotons(const std::string& tagName,
-                                    const Orientation orientation) const;
+                                    const Orientation orientation,
+                                    const bool aligned = false,
+                                    const bool exciseSoftClips = false) const;
     std::string FetchBasesRaw(const std::string& tagName) const;
 
     std::string FetchBases(const std::string& tagName,
