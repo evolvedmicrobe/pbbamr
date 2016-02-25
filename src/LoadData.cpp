@@ -252,7 +252,6 @@ List loadheader(std::string filename) {
       names[i] = prog.Name();
       version[i] = prog.Version();
       cmdLine[i] = prog.CommandLine();
-      Rcpp::Rcout << prog.CommandLine();
     }
     df["programs"] = DataFrame::create(Named("name") = names,
                                        Named("version") = version,
