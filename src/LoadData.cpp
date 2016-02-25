@@ -177,6 +177,94 @@ std::pair<std::string, std::string> _sampleAndTrimSeqs(const std::string& read,
   return std::pair<std::string, std::string>(new_read, new_ref);
 }
 
+
+
+//' Load BAM header
+//'
+//' This function loads the header of a BAM file into a List.  It will attempt to load the
+//' list of sequences, program used and read groups as well as the version of the
+//' BAM file, skipping over any information that is not present.
+//'
+//' @param filename The BAM file name
+//' @export
+//' @examples loadheader("~git/pbbam/tests/data/dataset/bam_mapping_1.bam")
+// [[Rcpp::export]]
+List loadheader(std::string filename) {
+  BamReader br(filename);
+  auto head = br.Header();
+  auto version = head.Version();
+  auto df =  List::create( Named("version") = version);
+
+  auto seqs = head.Sequences();
+  if (seqs.size() >0) {
+    auto n = seqs.size();
+    CharacterVector names(n);
+    CharacterVector lengths(n);
+    for(int i=0; i < n; i++) {
+      auto seq = seqs.at(i);
+      names[i] = seq.Name();
+      lengths[i] = seq.Length();
+    }
+    df["sequences"] = DataFrame::create(Named("reference") = names,
+                                        Named("lengths") = lengths);
+  }
+
+  auto rgs = head.ReadGroups();
+  if (rgs.size() > 0) {
+    CharacterVector ids(rgs.size());
+    CharacterVector movie(rgs.size());
+    CharacterVector plat(rgs.size());
+    CharacterVector chem(rgs.size());
+    CharacterVector frameRate(rgs.size());
+    CharacterVector binding(rgs.size());
+    CharacterVector baseVersion(rgs.size());
+    for(int i = 0; i < rgs.size(); i++) {
+      auto rg = rgs.at(i);
+      ids[i] = rg.Id();
+      movie[i] = rg.MovieName();
+      plat[i] = rg.Platform();
+      frameRate[i] = rg.FrameRateHz();
+      binding[i] = rg.BindingKit();
+      baseVersion = rg.BasecallerVersion();
+    }
+    df["readgroups"] = DataFrame::create( _["movie"] = movie,
+                                          _["platform"] = plat,
+                                          _["chemistry"] = chem,
+                                          _["framerate"] = frameRate,
+                                          _["bindingkit"] = binding,
+                                          _["basecaller"] = baseVersion);
+
+  }
+
+
+  auto comments = head.Comments();
+  if (comments.size() > 0 ) {
+    df["comments"] = wrap(comments);
+  }
+
+  auto programs = head.Programs();
+  if (programs.size() > 0) {
+    CharacterVector names(programs.size());
+    CharacterVector version(programs.size());
+    CharacterVector cmdLine(programs.size());
+    for(int i=0; i < programs.size(); i++) {
+      auto prog = programs.at(i);
+      names[i] = prog.Name();
+      version[i] = prog.Version();
+      cmdLine[i] = prog.CommandLine();
+      Rcpp::Rcout << prog.CommandLine();
+    }
+    df["programs"] = DataFrame::create(Named("name") = names,
+                                       Named("version") = version,
+                                       Named("cmdline") = cmdLine);
+  }
+
+  return df;
+}
+
+
+
+
 //' Load PBI BAM index file
 //'
 //' This function loads a pbi index file into a dataframe.  Depending on the
@@ -191,7 +279,7 @@ std::pair<std::string, std::string> _sampleAndTrimSeqs(const std::string& read,
 //' @param loadNumPasses Should we load the number of passes data? (Default = FALSE)
 //' @param loadRQ Shouold we load the read quality? (Default = FALSE)
 //' @export
-//' @examples loadpbi("~git/pbbam/tests/data/dataset/bam_mapping_1.bam.pbi")
+//' @examples loadpbi("~git/pbbam/tests/data/dataset/bam_mapping_1.bam")
 // [[Rcpp::export]]
 DataFrame loadpbi(std::string filename,
                   bool loadSNR = false,

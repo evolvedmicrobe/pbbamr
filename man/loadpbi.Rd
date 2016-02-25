@@ -25,6 +25,6 @@ The original BAM file can also be read to gather additional covariates such as t
 and number of passes, though this may take longer.
 }
 \examples{
-loadpbi("~git/pbbam/tests/data/dataset/bam_mapping_1.bam.pbi")
+loadpbi("~git/pbbam/tests/data/dataset/bam_mapping_1.bam")
 }
 

@@ -5,6 +5,17 @@
 
 using namespace Rcpp;
 
+// loadheader
+List loadheader(std::string filename);
+RcppExport SEXP pbbamr_loadheader(SEXP filenameSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< std::string >::type filename(filenameSEXP);
+    __result = Rcpp::wrap(loadheader(filename));
+    return __result;
+END_RCPP
+}
 // loadpbi
 DataFrame loadpbi(std::string filename, bool loadSNR, bool loadNumPasses, bool loadRQ);
 RcppExport SEXP pbbamr_loadpbi(SEXP filenameSEXP, SEXP loadSNRSEXP, SEXP loadNumPassesSEXP, SEXP loadRQSEXP) {
