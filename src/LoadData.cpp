@@ -206,7 +206,7 @@ List loadheader(std::string filename) {
       lengths[i] = seq.Length();
     }
     df["sequences"] = DataFrame::create(Named("reference") = names,
-                                        Named("lengths") = lengths);
+                                        Named("length") = lengths);
   }
 
   auto rgs = head.ReadGroups();
