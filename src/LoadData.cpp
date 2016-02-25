@@ -10,10 +10,17 @@
 #include <pbbam/PbiRawData.h>
 #include <pbbam/PbiIndexedBamReader.h>
 #include <pbbam/ReadGroupInfo.h>
+#include <fstream>
 
 using namespace Rcpp;
 using namespace PacBio::BAM;
 
+
+bool FileExists(const std::string& path)
+{
+  std::ifstream ifile(path.c_str());
+  return ifile.good();
+}
 
 char getRandomBase() {
   char bases[] = {'A', 'C', 'G', 'T'};
@@ -432,6 +439,14 @@ DataFrame loadpbi(std::string filename,
 // [[Rcpp::export]]
 List loadDataAtOffsets(CharacterVector offsets, std::string bamName, std::string indexedFastaName) {
   try {
+
+    if(!FileExists(indexedFastaName)) {
+      stop("Fasta file does not exist or is not readable.");
+    }
+
+    if(!FileExists(bamName)) {
+      stop("BAM file does not exist or is not readable.");
+    }
 
     IndexedFastaReader fasta(indexedFastaName);
     BamReader reader(bamName);
