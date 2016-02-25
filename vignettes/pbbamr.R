@@ -5,8 +5,6 @@ library(pbbamr)
 bamname = system.file("extdata", "bam_mapping_1.bam", package="pbbamr")
 # Load the index table.
 ind = loadpbi(bamname)
-
-
 # Show the first 3 rows (transposed, note kable just formats)
 knitr::kable(t(ind[1:3,]))
 
@@ -26,10 +24,6 @@ ggplot(ind, aes(x=errorRate)) + geom_density(fill="cyan") + theme_bw() +
 ## ---- echo=TRUE, results='hold'------------------------------------------
 # Get the name of the sample indexed FASTA file
 fastaname = system.file("extdata", "lambdaNEB.fa", package="pbbamr")
-
-
-loadHMMfromBAM(ind$offset, bamname, fastaname)
-
 # let's just grab and plot one alignment.
 allAlns = loadDataAtOffsets(ind$offset[1], bamname, fastaname)
 # The alignments are returned as a list of data frames
@@ -80,4 +74,24 @@ ggplot(agg, aes(x=AfterDeletion, y=Deleted, fill=Count)) + geom_tile() +
   theme_bw(base_size=10)  + 
   labs(title="Anyone think G/C homopolymers\nwill be hard in consensus?",
        x="Base After Deletion", y="Deleted Base")
+
+## ---- echo=TRUE, results='asis'------------------------------------------
+ifastaname = system.file("extdata", "All4Mer.V2.11.fna", package="pbbamr")
+ibamname = system.file("extdata", "internalsample.bam", package="pbbamr")
+# Load the index table.
+iind = loadpbi(ibamname)
+allAlns = loadDataAtOffsets(iind$offset, ibamname, ifastaname)
+# let's combine the individual alignments into one big data frame
+alns = do.call(rbind, allAlns)
+knitr::kable(head(alns[1:6,]))
+ggplot(alns[alns$pkmid!=0,], aes(x=pkmid, fill=read)) + geom_density(alpha=.5) + theme_classic()
+
+## ---- echo=TRUE, results='asis'------------------------------------------
+header = loadheader(ibamname)
+# Print out some of the items available in the list
+knitr::kable(header$version)
+knitr::kable(header$readgroups)
+knitr::kable(header$sequences)
+knitr::kable(header$programs)
+
 

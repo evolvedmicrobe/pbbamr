@@ -182,5 +182,35 @@ ggplot(agg, aes(x=AfterDeletion, y=Deleted, fill=Count)) + geom_tile() +
        x="Base After Deletion", y="Deleted Base")
 ```  
   
-    
+  
+## More Advanced Alignment Metrics
+
+pbbamr also enables you to see valuable metrics like SNR, pkMid and the pulse 
+width if they are available in the alignment file (as they are in internal mode BAMS).
+
+```{r, echo=TRUE, results='asis'}
+ifastaname = system.file("extdata", "All4Mer.V2.11.fna", package="pbbamr")
+ibamname = system.file("extdata", "internalsample.bam", package="pbbamr")
+# Load the index table.
+iind = loadpbi(ibamname)
+allAlns = loadDataAtOffsets(iind$offset, ibamname, ifastaname)
+# let's combine the individual alignments into one big data frame
+alns = do.call(rbind, allAlns)
+knitr::kable(head(alns[1:6,]))
+ggplot(alns[alns$pkmid!=0,], aes(x=pkmid, fill=read)) + geom_density(alpha=.5) + theme_classic()
+```
+  
+## Getting header information
+
+You can obtain most of the information available in the header simply by calling
+the loadheader function.
+```{r, echo=TRUE, results='asis'}
+header = loadheader(ibamname)
+# Print out some of the items available in the list
+knitr::kable(header$version)
+knitr::kable(header$readgroups)
+knitr::kable(header$sequences)
+knitr::kable(header$programs)
+
+```
 
