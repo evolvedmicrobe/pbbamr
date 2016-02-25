@@ -3,6 +3,10 @@
 An R library to view and examine PacBio BAM format files.  Cannot be used on 
 windows computers.
 
+## Documentation
+
+[The online vignette](http://htmlpreview.github.io/?http://github.com/PacificBiosciences/pbbamr/blob/master/vignettes/pbbamr.html)
+
 ##Installation
 
 ```
