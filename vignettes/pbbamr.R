@@ -72,7 +72,7 @@ dels$Count = 1
 agg = aggregate(Count ~ AfterDeletion + Deleted, dels, length )
 ggplot(agg, aes(x=AfterDeletion, y=Deleted, fill=Count)) + geom_tile() +
   theme_bw(base_size=10)  + 
-  labs(title="Anyone think G/C homopolymers\nwill be hard in consensus?",
+  labs(title="Deletion by Context",
        x="Base After Deletion", y="Deleted Base")
 
 ## ---- echo=TRUE, results='asis'------------------------------------------
