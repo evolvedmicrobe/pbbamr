@@ -43,6 +43,32 @@ BEGIN_RCPP
     return __result;
 END_RCPP
 }
+// loadSubreadsAtOffsets
+List loadSubreadsAtOffsets(CharacterVector offsets, std::string bamName);
+RcppExport SEXP pbbamr_loadSubreadsAtOffsets(SEXP offsetsSEXP, SEXP bamNameSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< CharacterVector >::type offsets(offsetsSEXP);
+    Rcpp::traits::input_parameter< std::string >::type bamName(bamNameSEXP);
+    __result = Rcpp::wrap(loadSubreadsAtOffsets(offsets, bamName));
+    return __result;
+END_RCPP
+}
+// loadReferenceWindow
+CharacterVector loadReferenceWindow(std::string id, int start, int end, std::string indexedFastaName);
+RcppExport SEXP pbbamr_loadReferenceWindow(SEXP idSEXP, SEXP startSEXP, SEXP endSEXP, SEXP indexedFastaNameSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< std::string >::type id(idSEXP);
+    Rcpp::traits::input_parameter< int >::type start(startSEXP);
+    Rcpp::traits::input_parameter< int >::type end(endSEXP);
+    Rcpp::traits::input_parameter< std::string >::type indexedFastaName(indexedFastaNameSEXP);
+    __result = Rcpp::wrap(loadReferenceWindow(id, start, end, indexedFastaName));
+    return __result;
+END_RCPP
+}
 // loadHMMfromBAM
 List loadHMMfromBAM(CharacterVector offsets, std::string bamName, std::string indexedFastaName, int trimToLength);
 RcppExport SEXP pbbamr_loadHMMfromBAM(SEXP offsetsSEXP, SEXP bamNameSEXP, SEXP indexedFastaNameSEXP, SEXP trimToLengthSEXP) {

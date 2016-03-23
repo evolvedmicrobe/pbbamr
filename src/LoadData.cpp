@@ -521,6 +521,82 @@ List loadDataAtOffsets(CharacterVector offsets, std::string bamName, std::string
 }
 
 
+
+//' Load BAM subreads as a list of data frames.
+//'
+//' @param offsets The virtual file offsets to retrieve BAM records from (can be obtained from the index file based on loadpbi).
+//' @param bamName The BAM file name to grab
+//'
+//' @return Returns a list of subreads as a list of character strings.
+//' @export
+// [[Rcpp::export]]
+List loadSubreadsAtOffsets(CharacterVector offsets, std::string bamName) {
+
+  try {
+    if(!FileExists(bamName)) {
+      stop("BAM file does not exist or is not readable.");
+    }
+
+    BamReader reader(bamName);
+    int n = offsets.size();
+    List results(n);
+    for(int i=0; i < n; i++) {
+      // Check for interrupt
+      if (i % 50 == 0 ) {
+        Rcpp::checkUserInterrupt();
+      }
+      // back convert from string to long.
+      std::string offset_string = as<std::string>(offsets[i]);
+      long offset = std::stol(offset_string);
+      reader.VirtualSeek(offset);
+      BamRecord r;
+      if (reader.GetNext(r)) {
+        std::string seq = r.Sequence();
+        std::string name = r.FullName();
+        auto fseq = List::create( Named("name") = name,
+                                  Named("read") = seq);
+        results[i] = fseq;
+      } else{
+        throw new std::out_of_range("No BAM record found at the given offset");
+      }
+    }
+    return results;
+  } catch (std::exception &ex) {
+    forward_exception_to_r(ex);
+  }
+  // Should never be called
+  return List::create(Named("test") = 2);
+}
+
+
+//' Load a section of the reference genome as a character string.
+//'
+//' @param id The name of the sequence
+//' @param start The start of the sequence
+//' @param end The end of the sequence
+//' @param indexedFastaName The name of the indexed fasta file this should come from.
+//'
+//' @return Returns a character vector of the sequence
+//' @export
+// [[Rcpp::export]]
+CharacterVector loadReferenceWindow(std::string id, int start, int end, std::string indexedFastaName) {
+  try {
+    if(!FileExists(indexedFastaName)) {
+      stop("Fasta file does not exist or is not readable.");
+    }
+    IndexedFastaReader fasta(indexedFastaName);
+    // int -> int32_t (which is an int)
+    Position s = start;
+    Position e = end;
+    return fasta.Subsequence(id, s, e);
+  } catch (std::exception &ex) {
+    forward_exception_to_r(ex);
+  }
+  return "failure";
+}
+
+
+
 //' Load BAM alignments as a list of list for the HMM model.
 //'
 //' @param offsets The virtual file offsets to retrieve BAM records from (can be obtained from the index file based on loadpbi).

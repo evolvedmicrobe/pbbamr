@@ -45,6 +45,30 @@ loadDataAtOffsets <- function(offsets, bamName, indexedFastaName) {
     .Call('pbbamr_loadDataAtOffsets', PACKAGE = 'pbbamr', offsets, bamName, indexedFastaName)
 }
 
+#' Load BAM subreads as a list of data frames.
+#'
+#' @param offsets The virtual file offsets to retrieve BAM records from (can be obtained from the index file based on loadpbi).
+#' @param bamName The BAM file name to grab
+#'
+#' @return Returns a list of subreads as a list of character strings.
+#' @export
+loadSubreadsAtOffsets <- function(offsets, bamName) {
+    .Call('pbbamr_loadSubreadsAtOffsets', PACKAGE = 'pbbamr', offsets, bamName)
+}
+
+#' Load a section of the reference genome as a character string.
+#'
+#' @param id The name of the sequence
+#' @param start The start of the sequence
+#' @param end The end of the sequence
+#' @param indexedFastaName The name of the indexed fasta file this should come from.
+#'
+#' @return Returns a character vector of the sequence
+#' @export
+loadReferenceWindow <- function(id, start, end, indexedFastaName) {
+    .Call('pbbamr_loadReferenceWindow', PACKAGE = 'pbbamr', id, start, end, indexedFastaName)
+}
+
 #' Load BAM alignments as a list of list for the HMM model.
 #'
 #' @param offsets The virtual file offsets to retrieve BAM records from (can be obtained from the index file based on loadpbi).
