@@ -194,9 +194,9 @@ std::pair<std::string, std::string> _sampleAndTrimSeqs(const std::string& read,
 //'
 //' @param filename The BAM file name
 //' @export
-//' @examples loadheader("~git/pbbam/tests/data/dataset/bam_mapping_1.bam")
+//' @examples loadHeader("~git/pbbam/tests/data/dataset/bam_mapping_1.bam")
 // [[Rcpp::export]]
-List loadheader(std::string filename) {
+List loadHeader(std::string filename) {
   BamReader br(filename);
   auto head = br.Header();
   auto version = head.Version();
@@ -283,11 +283,11 @@ List loadheader(std::string filename) {
 //' @param filename The BAM file name (without .pbi)
 //' @param loadSNR Should we load the four channel SNR data? (Default = FALSE)
 //' @param loadNumPasses Should we load the number of passes data? (Default = FALSE)
-//' @param loadRQ Shouold we load the read quality? (Default = FALSE)
+//' @param loadRQ Should we load the read quality? (Default = FALSE)
 //' @export
-//' @examples loadpbi("~git/pbbam/tests/data/dataset/bam_mapping_1.bam")
+//' @examples loadPBI("~git/pbbam/tests/data/dataset/bam_mapping_1.bam")
 // [[Rcpp::export]]
-DataFrame loadpbi(std::string filename,
+DataFrame loadPBI(std::string filename,
                   bool loadSNR = false,
                   bool loadNumPasses = false,
                   bool loadRQ = false
@@ -430,7 +430,7 @@ DataFrame loadpbi(std::string filename,
 
 //' Load BAM alignments as a list of data frames.
 //'
-//' @param offsets The virtual file offsets to retrieve BAM records from (can be obtained from the index file based on loadpbi).
+//' @param offsets The virtual file offsets to retrieve BAM records from (can be obtained from the index file based on loadPBI).
 //' @param bamName The BAM file name to grab
 //' @param indexedFastaName The name of the indexed fasta file this should come from.
 //'
@@ -524,7 +524,7 @@ List loadDataAtOffsets(CharacterVector offsets, std::string bamName, std::string
 
 //' Load BAM subreads as a list of data frames.
 //'
-//' @param offsets The virtual file offsets to retrieve BAM records from (can be obtained from the index file based on loadpbi).
+//' @param offsets The virtual file offsets to retrieve BAM records from (can be obtained from the index file based on loadPBI).
 //' @param bamName The BAM file name to grab
 //'
 //' @return Returns a list of subreads as a list of character strings.
@@ -599,7 +599,7 @@ CharacterVector loadReferenceWindow(std::string id, int start, int end, std::str
 
 //' Load BAM alignments as a list of list for the HMM model.
 //'
-//' @param offsets The virtual file offsets to retrieve BAM records from (can be obtained from the index file based on loadpbi).
+//' @param offsets The virtual file offsets to retrieve BAM records from (can be obtained from the index file based on loadPBI).
 //' @param bamName The BAM file name to grab
 //' @param indexedFastaName The name of the indexed fasta file this should come from.
 //' @param trimToLength How much should we subsample the alignments?
@@ -745,7 +745,7 @@ List loadHMMfromBAM(CharacterVector offsets,
 
 //' Load BAM alignment from a single ZMW as a list of list for the HMM model.
 //'
-//' @param offsets The virtual file offsets to retrieve BAM records from (can be obtained from the index file based on loadpbi).
+//' @param offsets The virtual file offsets to retrieve BAM records from (can be obtained from the index file based on loadPBI).
 //' @param bamName The BAM file name to grab
 //' @param indexedFastaName The name of the indexed fasta file this should come from.
 //' @param windowBreakSize We generate a new "window" every time 2 basepairs are matching in a particular gap.

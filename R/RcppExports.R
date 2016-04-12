@@ -9,9 +9,9 @@
 #'
 #' @param filename The BAM file name
 #' @export
-#' @examples loadheader("~git/pbbam/tests/data/dataset/bam_mapping_1.bam")
-loadheader <- function(filename) {
-    .Call('pbbamr_loadheader', PACKAGE = 'pbbamr', filename)
+#' @examples loadHeader("~git/pbbam/tests/data/dataset/bam_mapping_1.bam")
+loadHeader <- function(filename) {
+    .Call('pbbamr_loadHeader', PACKAGE = 'pbbamr', filename)
 }
 
 #' Load PBI BAM index file
@@ -26,16 +26,16 @@ loadheader <- function(filename) {
 #' @param filename The BAM file name (without .pbi)
 #' @param loadSNR Should we load the four channel SNR data? (Default = FALSE)
 #' @param loadNumPasses Should we load the number of passes data? (Default = FALSE)
-#' @param loadRQ Shouold we load the read quality? (Default = FALSE)
+#' @param loadRQ Should we load the read quality? (Default = FALSE)
 #' @export
-#' @examples loadpbi("~git/pbbam/tests/data/dataset/bam_mapping_1.bam")
-loadpbi <- function(filename, loadSNR = FALSE, loadNumPasses = FALSE, loadRQ = FALSE) {
-    .Call('pbbamr_loadpbi', PACKAGE = 'pbbamr', filename, loadSNR, loadNumPasses, loadRQ)
+#' @examples loadPBI("~git/pbbam/tests/data/dataset/bam_mapping_1.bam")
+loadPBI <- function(filename, loadSNR = FALSE, loadNumPasses = FALSE, loadRQ = FALSE) {
+    .Call('pbbamr_loadPBI', PACKAGE = 'pbbamr', filename, loadSNR, loadNumPasses, loadRQ)
 }
 
 #' Load BAM alignments as a list of data frames.
 #'
-#' @param offsets The virtual file offsets to retrieve BAM records from (can be obtained from the index file based on loadpbi).
+#' @param offsets The virtual file offsets to retrieve BAM records from (can be obtained from the index file based on loadPBI).
 #' @param bamName The BAM file name to grab
 #' @param indexedFastaName The name of the indexed fasta file this should come from.
 #'
@@ -47,7 +47,7 @@ loadDataAtOffsets <- function(offsets, bamName, indexedFastaName) {
 
 #' Load BAM subreads as a list of data frames.
 #'
-#' @param offsets The virtual file offsets to retrieve BAM records from (can be obtained from the index file based on loadpbi).
+#' @param offsets The virtual file offsets to retrieve BAM records from (can be obtained from the index file based on loadPBI).
 #' @param bamName The BAM file name to grab
 #'
 #' @return Returns a list of subreads as a list of character strings.
@@ -71,7 +71,7 @@ loadReferenceWindow <- function(id, start, end, indexedFastaName) {
 
 #' Load BAM alignments as a list of list for the HMM model.
 #'
-#' @param offsets The virtual file offsets to retrieve BAM records from (can be obtained from the index file based on loadpbi).
+#' @param offsets The virtual file offsets to retrieve BAM records from (can be obtained from the index file based on loadPBI).
 #' @param bamName The BAM file name to grab
 #' @param indexedFastaName The name of the indexed fasta file this should come from.
 #' @param trimToLength How much should we subsample the alignments?
@@ -84,7 +84,7 @@ loadHMMfromBAM <- function(offsets, bamName, indexedFastaName, trimToLength = 14
 
 #' Load BAM alignment from a single ZMW as a list of list for the HMM model.
 #'
-#' @param offsets The virtual file offsets to retrieve BAM records from (can be obtained from the index file based on loadpbi).
+#' @param offsets The virtual file offsets to retrieve BAM records from (can be obtained from the index file based on loadPBI).
 #' @param bamName The BAM file name to grab
 #' @param indexedFastaName The name of the indexed fasta file this should come from.
 #' @param windowBreakSize We generate a new "window" every time 2 basepairs are matching in a particular gap.
