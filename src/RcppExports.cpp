@@ -98,3 +98,14 @@ BEGIN_RCPP
     return __result;
 END_RCPP
 }
+// loadRegionsTable
+DataFrame loadRegionsTable(const std::string& subreadsBamName);
+RcppExport SEXP pbbamr_loadRegionsTable(SEXP subreadsBamNameSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< const std::string& >::type subreadsBamName(subreadsBamNameSEXP);
+    __result = Rcpp::wrap(loadRegionsTable(subreadsBamName));
+    return __result;
+END_RCPP
+}

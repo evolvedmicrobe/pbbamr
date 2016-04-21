@@ -10,7 +10,15 @@
 #include <pbbam/PbiRawData.h>
 #include <pbbam/PbiIndexedBamReader.h>
 #include <pbbam/ReadGroupInfo.h>
+
+#include <pbbam/virtual/VirtualPolymeraseReader.h>
+#include <pbbam/virtual/VirtualPolymeraseBamRecord.h>
+#include <pbbam/virtual/VirtualRegion.h>
+#include <pbbam/virtual/VirtualRegionType.h>
+
 #include <fstream>
+
+#include <iostream>
 
 using namespace Rcpp;
 using namespace PacBio::BAM;
@@ -809,4 +817,77 @@ List loadSingleZmwHMMfromBAM(CharacterVector offsets,
 
 
 
+std::string replaceSuffix(const std::string& s,
+                          const std::string& oldSuffix,
+                          const std::string& newSuffix)
+{
+    if (s.substr(s.length() - oldSuffix.length(), oldSuffix.length()) != oldSuffix)
+        stop("Unexpected suffix!");
+    return s.substr(0, s.length() - oldSuffix.length()) + newSuffix;
+}
 
+
+//' Load regions table
+//'
+//' Load a "regions table" for a subreads.bam (and optionally, a
+//' corresponding `aligned_subreads.bam`).
+//'
+//' Presently, this needs to traverse the entire BAM files---the PBI
+//' doesn't contain any "region type" information.  If this becomes
+//' crucial we might ' want to consider including it in the PBI.
+//'
+//' @param subreadsBamName the .subreads.bam file name.  The corresponding .scraps.bam must be available in the same directory
+//' @return a data frame with columns HoleNumber, RegionType, RegionStart, RegionEnd, indicating the base extent of regions of each type.
+//' @export
+// [[Rcpp::export]]
+DataFrame loadRegionsTable(const std::string& subreadsBamName)
+{
+    CharacterVector regionTypeLevels = CharacterVector::create(
+        "ADAPTER", "BARCODE", "FILTERED", "SUBREAD",
+        "HQREGION", "LQREGION", "ALIGNMENT");
+
+    const std::map<VirtualRegionType, int> regionTypeToLevel {
+        { VirtualRegionType::ADAPTER  , 1 },
+        { VirtualRegionType::BARCODE  , 2 },
+        { VirtualRegionType::FILTERED , 3 },
+        { VirtualRegionType::SUBREAD  , 4 },
+        { VirtualRegionType::HQREGION , 5 },
+        { VirtualRegionType::LQREGION , 6 } };
+
+    const std::string scrapsBamName = replaceSuffix(subreadsBamName, ".subreads.bam", ".scraps.bam");
+
+    VirtualPolymeraseReader vpr(subreadsBamName, scrapsBamName);
+
+    std::vector<int> holeNumber;
+    std::vector<int> regionType;
+    std::vector<int> startBase;
+    std::vector<int> endBase;
+
+    while (vpr.HasNext())
+    {
+        VirtualPolymeraseBamRecord record = vpr.Next();
+        const auto virtualRegionsMap = record.VirtualRegionsMap();
+        for (auto it : virtualRegionsMap)
+        {
+            const VirtualRegionType& rtype = it.first;
+            const std::vector<VirtualRegion>& regions = it.second;
+            for (const auto& region: regions) {
+                holeNumber.push_back(record.HoleNumber());
+                regionType.push_back(regionTypeToLevel.at(rtype));
+                startBase.push_back(region.beginPos);
+                endBase.push_back(region.endPos);
+            }
+        }
+    }
+
+    IntegerVector regionTypeR(regionType.begin(), regionType.end());
+    regionTypeR.attr("class") = "factor";
+    regionTypeR.attr("levels") = regionTypeLevels;
+
+    DataFrame rv = DataFrame::create(
+        Named("HoleNumber")  = holeNumber,
+        Named("RegionType")  = regionTypeR,
+        Named("RegionStart") = startBase,
+        Named("RegionEnd")   = endBase);
+    return rv;
+}

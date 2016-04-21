@@ -95,3 +95,19 @@ loadSingleZmwHMMfromBAM <- function(offsets, bamName, indexedFastaName, windowBr
     .Call('pbbamr_loadSingleZmwHMMfromBAM', PACKAGE = 'pbbamr', offsets, bamName, indexedFastaName, windowBreakSize, minSize)
 }
 
+#' Load regions table
+#'
+#' Load a "regions table" for a subreads.bam (and optionally, a
+#' corresponding `aligned_subreads.bam`).
+#'
+#' Presently, this needs to traverse the entire BAM files---the PBI
+#' doesn't contain any "region type" information.  If this becomes
+#' crucial we might ' want to consider including it in the PBI.
+#'
+#' @param subreadsBamName the .subreads.bam file name.  The corresponding .scraps.bam must be available in the same directory
+#' @return a data frame with columns HoleNumber, RegionType, RegionStart, RegionEnd, indicating the base extent of regions of each type.
+#' @export
+loadRegionsTable <- function(subreadsBamName) {
+    .Call('pbbamr_loadRegionsTable', PACKAGE = 'pbbamr', subreadsBamName)
+}
+
