@@ -4,7 +4,7 @@ library(pbbamr)
 # distributed with the package.
 bamname = system.file("extdata", "bam_mapping_1.bam", package="pbbamr")
 # Load the index table.
-ind = loadpbi(bamname)
+ind = loadPBI(bamname)
 # Show the first 3 rows (transposed, note kable just formats)
 knitr::kable(t(ind[1:3,]))
 
@@ -79,7 +79,7 @@ ggplot(agg, aes(x=AfterDeletion, y=Deleted, fill=Count)) + geom_tile() +
 ifastaname = system.file("extdata", "All4Mer.V2.11.fna", package="pbbamr")
 ibamname = system.file("extdata", "internalsample.bam", package="pbbamr")
 # Load the index table.
-iind = loadpbi(ibamname)
+iind = loadPBI(ibamname)
 allAlns = loadDataAtOffsets(iind$offset, ibamname, ifastaname)
 # let's combine the individual alignments into one big data frame
 alns = do.call(rbind, allAlns)

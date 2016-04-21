@@ -87,13 +87,13 @@ install_github(&quot;PacificBiosciences/pbbamr&quot;, build_vignettes = FALSE)</
 </div>
 <div id="loading-and-plotting-pbi-files" class="section level2">
 <h2>Loading and plotting pbi files</h2>
-<p>Simply pass a BAM file name to the <code>loadpbi</code> function (the pbi file must exist as the filename + “.pbi”) which will return a data frame with the information available in the pbi file.</p>
+<p>Simply pass a BAM file name to the <code>loadPBI</code> function (the pbi file must exist as the filename + “.pbi”) which will return a data frame with the information available in the pbi file.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(pbbamr)
 <span class="co"># For this example, we will load some sample data</span>
 <span class="co"># distributed with the package.</span>
 bamname =<span class="st"> </span><span class="kw">system.file</span>(<span class="st">&quot;extdata&quot;</span>, <span class="st">&quot;bam_mapping_1.bam&quot;</span>, <span class="dt">package=</span><span class="st">&quot;pbbamr&quot;</span>)
 <span class="co"># Load the index table.</span>
-ind =<span class="st"> </span><span class="kw">loadpbi</span>(bamname)
+ind =<span class="st"> </span><span class="kw">loadPBI</span>(bamname)
 <span class="co"># Show the first 3 rows (transposed, note kable just formats)</span>
 knitr::<span class="kw">kable</span>(<span class="kw">t</span>(ind[<span class="dv">1</span>:<span class="dv">3</span>,]))</code></pre></div>
 <table>
@@ -259,7 +259,7 @@ ind$alnLength =<span class="st"> </span>ind$tend -<span class="st"> </span>ind$t
 </tbody>
 </table>
 <p>And you can do this with simple flags:</p>
-<pre><code>ind &lt;- loadpbi(bamname, loadSNR=TRUE, loadNumPasses = TRUE, loadRQ = TRUE)</code></pre>
+<pre><code>ind &lt;- loadPBI(bamname, loadSNR=TRUE, loadNumPasses = TRUE, loadRQ = TRUE)</code></pre>
 <p>If the data file does not have the requested fields, NA values will be provided instead. Since parsing the BAM file for this data is more time consuming than just reading the index, it is not loaded by default.</p>
 </div>
 <div id="examining-individual-alignments" class="section level2">
@@ -399,7 +399,7 @@ agg =<span class="st"> </span><span class="kw">aggregate</span>(Count ~<span cla
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">ifastaname =<span class="st"> </span><span class="kw">system.file</span>(<span class="st">&quot;extdata&quot;</span>, <span class="st">&quot;All4Mer.V2.11.fna&quot;</span>, <span class="dt">package=</span><span class="st">&quot;pbbamr&quot;</span>)
 ibamname =<span class="st"> </span><span class="kw">system.file</span>(<span class="st">&quot;extdata&quot;</span>, <span class="st">&quot;internalsample.bam&quot;</span>, <span class="dt">package=</span><span class="st">&quot;pbbamr&quot;</span>)
 <span class="co"># Load the index table.</span>
-iind =<span class="st"> </span><span class="kw">loadpbi</span>(ibamname)
+iind =<span class="st"> </span><span class="kw">loadPBI</span>(ibamname)
 allAlns =<span class="st"> </span><span class="kw">loadDataAtOffsets</span>(iind$offset, ibamname, ifastaname)
 <span class="co"># let's combine the individual alignments into one big data frame</span>
 alns =<span class="st"> </span><span class="kw">do.call</span>(rbind, allAlns)
