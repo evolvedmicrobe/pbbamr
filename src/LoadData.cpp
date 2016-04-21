@@ -18,8 +18,6 @@
 
 #include <fstream>
 
-#include <iostream>
-
 using namespace Rcpp;
 using namespace PacBio::BAM;
 
