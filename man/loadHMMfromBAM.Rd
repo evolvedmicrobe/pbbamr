@@ -7,7 +7,7 @@
 loadHMMfromBAM(offsets, bamName, indexedFastaName, trimToLength = 140L)
 }
 \arguments{
-\item{offsets}{The virtual file offsets to retrieve BAM records from (can be obtained from the index file based on loadpbi).}
+\item{offsets}{The virtual file offsets to retrieve BAM records from (can be obtained from the index file based on loadPBI).}
 
 \item{bamName}{The BAM file name to grab}
 

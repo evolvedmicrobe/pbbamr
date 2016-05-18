@@ -5,20 +5,20 @@
 
 using namespace Rcpp;
 
-// loadheader
-List loadheader(std::string filename);
-RcppExport SEXP pbbamr_loadheader(SEXP filenameSEXP) {
+// loadHeader
+List loadHeader(std::string filename);
+RcppExport SEXP pbbamr_loadHeader(SEXP filenameSEXP) {
 BEGIN_RCPP
     Rcpp::RObject __result;
     Rcpp::RNGScope __rngScope;
     Rcpp::traits::input_parameter< std::string >::type filename(filenameSEXP);
-    __result = Rcpp::wrap(loadheader(filename));
+    __result = Rcpp::wrap(loadHeader(filename));
     return __result;
 END_RCPP
 }
-// loadpbi
-DataFrame loadpbi(std::string filename, bool loadSNR, bool loadNumPasses, bool loadRQ);
-RcppExport SEXP pbbamr_loadpbi(SEXP filenameSEXP, SEXP loadSNRSEXP, SEXP loadNumPassesSEXP, SEXP loadRQSEXP) {
+// loadPBI
+DataFrame loadPBI(std::string filename, bool loadSNR, bool loadNumPasses, bool loadRQ);
+RcppExport SEXP pbbamr_loadPBI(SEXP filenameSEXP, SEXP loadSNRSEXP, SEXP loadNumPassesSEXP, SEXP loadRQSEXP) {
 BEGIN_RCPP
     Rcpp::RObject __result;
     Rcpp::RNGScope __rngScope;
@@ -26,7 +26,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< bool >::type loadSNR(loadSNRSEXP);
     Rcpp::traits::input_parameter< bool >::type loadNumPasses(loadNumPassesSEXP);
     Rcpp::traits::input_parameter< bool >::type loadRQ(loadRQSEXP);
-    __result = Rcpp::wrap(loadpbi(filename, loadSNR, loadNumPasses, loadRQ));
+    __result = Rcpp::wrap(loadPBI(filename, loadSNR, loadNumPasses, loadRQ));
     return __result;
 END_RCPP
 }
@@ -95,6 +95,17 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type windowBreakSize(windowBreakSizeSEXP);
     Rcpp::traits::input_parameter< int >::type minSize(minSizeSEXP);
     __result = Rcpp::wrap(loadSingleZmwHMMfromBAM(offsets, bamName, indexedFastaName, windowBreakSize, minSize));
+    return __result;
+END_RCPP
+}
+// loadRegionsTable
+DataFrame loadRegionsTable(const std::string& subreadsBamName);
+RcppExport SEXP pbbamr_loadRegionsTable(SEXP subreadsBamNameSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< const std::string& >::type subreadsBamName(subreadsBamNameSEXP);
+    __result = Rcpp::wrap(loadRegionsTable(subreadsBamName));
     return __result;
 END_RCPP
 }

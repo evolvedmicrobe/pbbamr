@@ -10,6 +10,12 @@
 #include <pbbam/PbiRawData.h>
 #include <pbbam/PbiIndexedBamReader.h>
 #include <pbbam/ReadGroupInfo.h>
+
+#include <pbbam/virtual/VirtualPolymeraseReader.h>
+#include <pbbam/virtual/VirtualPolymeraseBamRecord.h>
+#include <pbbam/virtual/VirtualRegion.h>
+#include <pbbam/virtual/VirtualRegionType.h>
+
 #include <fstream>
 
 using namespace Rcpp;
@@ -194,9 +200,9 @@ std::pair<std::string, std::string> _sampleAndTrimSeqs(const std::string& read,
 //'
 //' @param filename The BAM file name
 //' @export
-//' @examples loadheader("~git/pbbam/tests/data/dataset/bam_mapping_1.bam")
+//' @examples loadHeader("~git/pbbam/tests/data/dataset/bam_mapping_1.bam")
 // [[Rcpp::export]]
-List loadheader(std::string filename) {
+List loadHeader(std::string filename) {
   BamReader br(filename);
   auto head = br.Header();
   auto version = head.Version();
@@ -283,11 +289,11 @@ List loadheader(std::string filename) {
 //' @param filename The BAM file name (without .pbi)
 //' @param loadSNR Should we load the four channel SNR data? (Default = FALSE)
 //' @param loadNumPasses Should we load the number of passes data? (Default = FALSE)
-//' @param loadRQ Shouold we load the read quality? (Default = FALSE)
+//' @param loadRQ Should we load the read quality? (Default = FALSE)
 //' @export
-//' @examples loadpbi("~git/pbbam/tests/data/dataset/bam_mapping_1.bam")
+//' @examples loadPBI("~git/pbbam/tests/data/dataset/bam_mapping_1.bam")
 // [[Rcpp::export]]
-DataFrame loadpbi(std::string filename,
+DataFrame loadPBI(std::string filename,
                   bool loadSNR = false,
                   bool loadNumPasses = false,
                   bool loadRQ = false
@@ -430,7 +436,7 @@ DataFrame loadpbi(std::string filename,
 
 //' Load BAM alignments as a list of data frames.
 //'
-//' @param offsets The virtual file offsets to retrieve BAM records from (can be obtained from the index file based on loadpbi).
+//' @param offsets The virtual file offsets to retrieve BAM records from (can be obtained from the index file based on loadPBI).
 //' @param bamName The BAM file name to grab
 //' @param indexedFastaName The name of the indexed fasta file this should come from.
 //'
@@ -524,7 +530,7 @@ List loadDataAtOffsets(CharacterVector offsets, std::string bamName, std::string
 
 //' Load BAM subreads as a list of data frames.
 //'
-//' @param offsets The virtual file offsets to retrieve BAM records from (can be obtained from the index file based on loadpbi).
+//' @param offsets The virtual file offsets to retrieve BAM records from (can be obtained from the index file based on loadPBI).
 //' @param bamName The BAM file name to grab
 //'
 //' @return Returns a list of subreads as a list of character strings.
@@ -599,7 +605,7 @@ CharacterVector loadReferenceWindow(std::string id, int start, int end, std::str
 
 //' Load BAM alignments as a list of list for the HMM model.
 //'
-//' @param offsets The virtual file offsets to retrieve BAM records from (can be obtained from the index file based on loadpbi).
+//' @param offsets The virtual file offsets to retrieve BAM records from (can be obtained from the index file based on loadPBI).
 //' @param bamName The BAM file name to grab
 //' @param indexedFastaName The name of the indexed fasta file this should come from.
 //' @param trimToLength How much should we subsample the alignments?
@@ -745,7 +751,7 @@ List loadHMMfromBAM(CharacterVector offsets,
 
 //' Load BAM alignment from a single ZMW as a list of list for the HMM model.
 //'
-//' @param offsets The virtual file offsets to retrieve BAM records from (can be obtained from the index file based on loadpbi).
+//' @param offsets The virtual file offsets to retrieve BAM records from (can be obtained from the index file based on loadPBI).
 //' @param bamName The BAM file name to grab
 //' @param indexedFastaName The name of the indexed fasta file this should come from.
 //' @param windowBreakSize We generate a new "window" every time 2 basepairs are matching in a particular gap.
@@ -809,4 +815,77 @@ List loadSingleZmwHMMfromBAM(CharacterVector offsets,
 
 
 
+std::string replaceSuffix(const std::string& s,
+                          const std::string& oldSuffix,
+                          const std::string& newSuffix)
+{
+    if (s.substr(s.length() - oldSuffix.length(), oldSuffix.length()) != oldSuffix)
+        stop("Unexpected suffix!");
+    return s.substr(0, s.length() - oldSuffix.length()) + newSuffix;
+}
 
+
+//' Load regions table
+//'
+//' Load a "regions table" for a subreads.bam (and optionally, a
+//' corresponding `aligned_subreads.bam`).
+//'
+//' Presently, this needs to traverse the entire BAM files---the PBI
+//' doesn't contain any "region type" information.  If this becomes
+//' crucial we might ' want to consider including it in the PBI.
+//'
+//' @param subreadsBamName the .subreads.bam file name.  The corresponding .scraps.bam must be available in the same directory
+//' @return a data frame with columns HoleNumber, RegionType, RegionStart, RegionEnd, indicating the base extent of regions of each type.
+//' @export
+// [[Rcpp::export]]
+DataFrame loadRegionsTable(const std::string& subreadsBamName)
+{
+    CharacterVector regionTypeLevels = CharacterVector::create(
+        "ADAPTER", "BARCODE", "FILTERED", "SUBREAD",
+        "HQREGION", "LQREGION", "ALIGNMENT");
+
+    const std::map<VirtualRegionType, int> regionTypeToLevel {
+        { VirtualRegionType::ADAPTER  , 1 },
+        { VirtualRegionType::BARCODE  , 2 },
+        { VirtualRegionType::FILTERED , 3 },
+        { VirtualRegionType::SUBREAD  , 4 },
+        { VirtualRegionType::HQREGION , 5 },
+        { VirtualRegionType::LQREGION , 6 } };
+
+    const std::string scrapsBamName = replaceSuffix(subreadsBamName, ".subreads.bam", ".scraps.bam");
+
+    VirtualPolymeraseReader vpr(subreadsBamName, scrapsBamName);
+
+    std::vector<int> holeNumber;
+    std::vector<int> regionType;
+    std::vector<int> startBase;
+    std::vector<int> endBase;
+
+    while (vpr.HasNext())
+    {
+        VirtualPolymeraseBamRecord record = vpr.Next();
+        const auto virtualRegionsMap = record.VirtualRegionsMap();
+        for (auto it : virtualRegionsMap)
+        {
+            const VirtualRegionType& rtype = it.first;
+            const std::vector<VirtualRegion>& regions = it.second;
+            for (const auto& region: regions) {
+                holeNumber.push_back(record.HoleNumber());
+                regionType.push_back(regionTypeToLevel.at(rtype));
+                startBase.push_back(region.beginPos);
+                endBase.push_back(region.endPos);
+            }
+        }
+    }
+
+    IntegerVector regionTypeR(regionType.begin(), regionType.end());
+    regionTypeR.attr("class") = "factor";
+    regionTypeR.attr("levels") = regionTypeLevels;
+
+    DataFrame rv = DataFrame::create(
+        Named("HoleNumber")  = holeNumber,
+        Named("RegionType")  = regionTypeR,
+        Named("RegionStart") = startBase,
+        Named("RegionEnd")   = endBase);
+    return rv;
+}
