@@ -98,6 +98,15 @@ public:
     /// \}
 
 public:
+    /// \name Operators
+    /// \{
+
+    bool operator==(const SequenceInfo& other) const;
+    bool operator!=(const SequenceInfo& other) const;
+
+    /// \}
+
+public:
     /// \name Conversion & Validation
     ///
 

@@ -129,6 +129,12 @@ inline std::vector<float> BamRecordView::Pkmean(void) const
 inline std::vector<float> BamRecordView::Pkmid(void) const
 { return record_.Pkmid(orientation_); }
 
+inline std::vector<float> BamRecordView::Pkmean2(void) const
+{ return record_.Pkmean2(orientation_); }
+
+inline std::vector<float> BamRecordView::Pkmid2(void) const
+{ return record_.Pkmid2(orientation_); }
+
 inline Frames BamRecordView::PrePulseFrames(void) const
 { return record_.PrePulseFrames(orientation_); }
 

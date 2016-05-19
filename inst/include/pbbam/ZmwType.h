@@ -34,41 +34,30 @@
 // SUCH DAMAGE.
 //
 // File Description
-/// \file PbiFile.cpp
-/// \brief Implements the PbiFile methods.
+/// \file ZmwType.h
+/// \brief Defines the ZmwType enum.
 //
-// Author: Derek Barnett
+// Author: Armin Töpfer
 
-#include "pbbam/PbiFile.h"
-#include "pbbam/BamFile.h"
-#include "pbbam/PbiBuilder.h"
-#include "pbbam/BamReader.h"
-using namespace PacBio;
-using namespace PacBio::BAM;
-using namespace PacBio::BAM::PbiFile;
-using namespace std;
+#ifndef ZMWTYPE_H
+#define ZMWTYPE_H
+
+#include "pbbam/Config.h"
 
 namespace PacBio {
 namespace BAM {
-namespace PbiFile {
 
-void CreateFrom(const BamFile& bamFile,
-                const PbiBuilder::CompressionLevel compressionLevel,
-                const size_t numThreads)
+/// \brief This enum defines the different ZMW categories of scraps
+///
+enum class ZmwType : char
 {
-    PbiBuilder builder(bamFile.PacBioIndexFilename(),
-                       bamFile.Header().Sequences().size(),
-                       compressionLevel,
-                       numThreads);
-    BamReader reader(bamFile);
-    BamRecord b;
-    int64_t offset = reader.VirtualTell();
-    while (reader.GetNext(b)) {
-        builder.AddRecord(b, offset);
-        offset = reader.VirtualTell();
-    }
-}
+    CONTROL   = 'C',
+    MALFORMED = 'M',
+    NORMAL    = 'N',
+    SENTINEL  = 'S'
+};
 
-} // namespace PbiFile
 } // namespace BAM
 } // namespace PacBio
+
+#endif // ZMWTYPE_H

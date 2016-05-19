@@ -32,43 +32,40 @@
 // OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
 // OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 // SUCH DAMAGE.
-//
-// File Description
-/// \file PbiFile.cpp
-/// \brief Implements the PbiFile methods.
-//
+
 // Author: Derek Barnett
 
-#include "pbbam/PbiFile.h"
-#include "pbbam/BamFile.h"
-#include "pbbam/PbiBuilder.h"
-#include "pbbam/BamReader.h"
+#include "FileProducer.h"
+#include <exception>
+#include <cstdio>
 using namespace PacBio;
 using namespace PacBio::BAM;
-using namespace PacBio::BAM::PbiFile;
+using namespace PacBio::BAM::internal;
 using namespace std;
 
-namespace PacBio {
-namespace BAM {
-namespace PbiFile {
+FileProducer::FileProducer(const string& targetFilename)
+    : FileProducer(targetFilename, targetFilename + ".tmp")
+{ }
 
-void CreateFrom(const BamFile& bamFile,
-                const PbiBuilder::CompressionLevel compressionLevel,
-                const size_t numThreads)
+FileProducer::FileProducer(const string& targetFilename,
+                           const string& tempFilename)
+    : targetFilename_(targetFilename)
+    , tempFilename_(tempFilename)
 {
-    PbiBuilder builder(bamFile.PacBioIndexFilename(),
-                       bamFile.Header().Sequences().size(),
-                       compressionLevel,
-                       numThreads);
-    BamReader reader(bamFile);
-    BamRecord b;
-    int64_t offset = reader.VirtualTell();
-    while (reader.GetNext(b)) {
-        builder.AddRecord(b, offset);
-        offset = reader.VirtualTell();
-    }
+    // override renaming if writing to stdout
+    //
+    // setting temp filename to '-' keeps consistent interfaces
+    // for derived classes to actually operate on temp filename
+    if (targetFilename_ == "-")
+        tempFilename_ = "-";
 }
 
-} // namespace PbiFile
-} // namespace BAM
-} // namespace PacBio
+FileProducer::~FileProducer(void)
+{
+    // skip renaming if there is a 'live' exception
+    // or if writing to stdout
+    if ((std::current_exception() == nullptr) && (tempFilename_ != "-")) {
+        std::rename(tempFilename_.c_str(),
+                    targetFilename_.c_str());
+    }
+}

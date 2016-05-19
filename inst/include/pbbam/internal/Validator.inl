@@ -34,41 +34,59 @@
 // SUCH DAMAGE.
 //
 // File Description
-/// \file PbiFile.cpp
-/// \brief Implements the PbiFile methods.
+/// \file Validator.inl
+/// \brief Inline implementations for the Validator class.
 //
 // Author: Derek Barnett
 
-#include "pbbam/PbiFile.h"
-#include "pbbam/BamFile.h"
-#include "pbbam/PbiBuilder.h"
-#include "pbbam/BamReader.h"
-using namespace PacBio;
-using namespace PacBio::BAM;
-using namespace PacBio::BAM::PbiFile;
-using namespace std;
+#include "pbbam/Validator.h"
+#include <stdexcept>
 
 namespace PacBio {
 namespace BAM {
-namespace PbiFile {
 
-void CreateFrom(const BamFile& bamFile,
-                const PbiBuilder::CompressionLevel compressionLevel,
-                const size_t numThreads)
+inline bool Validator::IsValid(const BamFile& file, const bool entireFile)
 {
-    PbiBuilder builder(bamFile.PacBioIndexFilename(),
-                       bamFile.Header().Sequences().size(),
-                       compressionLevel,
-                       numThreads);
-    BamReader reader(bamFile);
-    BamRecord b;
-    int64_t offset = reader.VirtualTell();
-    while (reader.GetNext(b)) {
-        builder.AddRecord(b, offset);
-        offset = reader.VirtualTell();
+    try {
+        if (entireFile)
+            ValidateEntireFile(file, 1);
+        else
+            ValidateFileMetadata(file, 1);
+        return true;
+    } catch (std::exception&) {
+        return false;
     }
 }
 
-} // namespace PbiFile
+inline bool Validator::IsValid(const BamHeader& header)
+{
+    try {
+        Validate(header, 1);
+        return true;
+    } catch (std::exception&) {
+        return false;
+    }
+}
+
+inline bool Validator::IsValid(const BamRecord& record)
+{
+    try {
+        Validate(record, 1);
+        return true;
+    } catch (std::exception&) {
+        return false;
+    }
+}
+
+inline bool Validator::IsValid(const ReadGroupInfo& rg)
+{
+    try {
+        Validate(rg, 1);
+        return true;
+    } catch (std::exception&) {
+        return false;
+    }
+}
+
 } // namespace BAM
 } // namespace PacBio

@@ -34,41 +34,54 @@
 // SUCH DAMAGE.
 //
 // File Description
-/// \file PbiFile.cpp
-/// \brief Implements the PbiFile methods.
+/// \file Version.cpp
+/// \brief Implements the Version class.
 //
 // Author: Derek Barnett
 
-#include "pbbam/PbiFile.h"
-#include "pbbam/BamFile.h"
-#include "pbbam/PbiBuilder.h"
-#include "pbbam/BamReader.h"
+#include "Version.h"
+#include "SequenceUtils.h"
+#include <sstream>
+
 using namespace PacBio;
 using namespace PacBio::BAM;
-using namespace PacBio::BAM::PbiFile;
+using namespace PacBio::BAM::internal;
 using namespace std;
 
-namespace PacBio {
-namespace BAM {
-namespace PbiFile {
+const Version Version::Current = Version(3,0,3);
+const Version Version::Minimum = Version(3,0,1);
 
-void CreateFrom(const BamFile& bamFile,
-                const PbiBuilder::CompressionLevel compressionLevel,
-                const size_t numThreads)
+// string must be "<major>.<minor>.<version>"
+Version::Version(const std::string& v)
+    : major_(0)
+    , minor_(0)
+    , revision_(0)
 {
-    PbiBuilder builder(bamFile.PacBioIndexFilename(),
-                       bamFile.Header().Sequences().size(),
-                       compressionLevel,
-                       numThreads);
-    BamReader reader(bamFile);
-    BamRecord b;
-    int64_t offset = reader.VirtualTell();
-    while (reader.GetNext(b)) {
-        builder.AddRecord(b, offset);
-        offset = reader.VirtualTell();
+    // parse string
+    try {
+        const auto fields = internal::Split(v, '.');
+        const auto numFields = fields.size();
+        if (numFields == 0)
+            throw std::runtime_error("invalid version number - empty string");
+        major_ = std::stoi(fields.at(0));
+        if (numFields > 1) {
+            minor_ = std::stoi(fields.at(1));
+            if (numFields > 2 )
+                revision_ = std::stoi(fields.at(2));
+        }
+    } catch (std::exception&) {
+        auto msg = string{ "invalid version number (" + v + "): failed to parse" };
+        throw std::runtime_error(msg);
     }
+
+    // ensure valid numbers
+    Check();
 }
 
-} // namespace PbiFile
-} // namespace BAM
-} // namespace PacBio
+std::string Version::ToString(void) const
+{
+    std::stringstream s;
+    s << major_ << '.' << minor_ << '.' << revision_;
+    return s.str();
+}
+

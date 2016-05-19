@@ -88,13 +88,16 @@ DataSet::DataSet(const string& filename)
     : d_(DataSetIO::FromUri(filename))
     , path_(FileUtils::DirectoryName(filename))
 {
-    // for FOFNs, child files are already resolved from CWD.
-    // FOFNs may be relative within so we have a bit of extra layered resolution as we
+    // for FOFN contents and raw BAM filenames, we can just use the current
+    // directory as the starting path.
     //
-    // NOTE: this workaround feels like a code smell, but is working for test cases
+    // (any relative paths in the FOFN have already been resolved)
     //
-    if (boost::algorithm::iends_with(filename, ".fofn"))
+    if (boost::algorithm::iends_with(filename, ".fofn") ||
+        boost::algorithm::iends_with(filename, ".bam"))
+    {
         path_ = FileUtils::CurrentWorkingDirectory();
+    }
 }
 
 DataSet::DataSet(const vector<string>& filenames)
@@ -145,9 +148,14 @@ vector<BamFile> DataSet::BamFiles(void) const
 {
     const PacBio::BAM::ExternalResources& resources = ExternalResources();
     
+//    cerr << "path: " << this->path_ << endl;
+
     vector<BamFile> result;
     result.reserve(resources.Size());
     for(const ExternalResource& ext : resources) {
+
+//        cerr << ext.ResourceId() << std::endl;
+
         // only bother resolving file path if this is a BAM file
         boost::iterator_range<string::const_iterator> bamFound = boost::algorithm::ifind_first(ext.MetaType(), "bam");
         if (!bamFound.empty()) {

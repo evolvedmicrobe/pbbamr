@@ -67,7 +67,7 @@ public:
     /// \{
 
     /// \brief This enum defines the supported comparison types
-    ///        (==, !=, <, <=, >, >=).
+    ///        { ==, !=, <, <=, >, >=, & (contains), ~ (not contains) }.
     ///
     enum Type {
         EQUAL = 0
@@ -76,6 +76,8 @@ public:
       , LESS_THAN_EQUAL
       , GREATER_THAN
       , GREATER_THAN_EQUAL
+      , CONTAINS
+      , NOT_CONTAINS
     };
 
     /// \brief Convert operator string to Compare::Type.
@@ -200,7 +202,7 @@ public:
     /// \note Currently only supports std::less<T> comparisons (i.e. sorting by
     ///       ascending value).
     ///
-    struct BarcodeForward : public MemberFunctionBase<uint16_t, &BamRecord::BarcodeForward> { };
+    struct BarcodeForward : public MemberFunctionBase<int16_t, &BamRecord::BarcodeForward> { };
 
     /// \brief Compares on BamRecord::BarcodeQuality.
     ///
@@ -220,7 +222,7 @@ public:
     /// \note Currently only supports std::less<T> comparisons (i.e. sorting by
     ///       ascending value).
     ///
-    struct BarcodeReverse: public MemberFunctionBase<uint16_t, &BamRecord::BarcodeReverse> { };
+    struct BarcodeReverse: public MemberFunctionBase<int16_t, &BamRecord::BarcodeReverse> { };
 
     /// \brief Compares on BamRecord::FullName.
     ///

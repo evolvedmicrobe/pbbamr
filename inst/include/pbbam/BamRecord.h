@@ -52,6 +52,7 @@
 #include "pbbam/Strand.h"
 #include "pbbam/QualityValues.h"
 #include "pbbam/virtual/VirtualRegionType.h"
+#include "pbbam/ZmwType.h"
 #include <memory>
 #include <string>
 #include <utility>
@@ -82,12 +83,14 @@ enum class ClipType
 ///
 enum class RecordType
 {
-    POLYMERASE  ///< Polymerase read
+    ZMW         ///< Polymerase read
   , HQREGION    ///< High-quality region
   , SUBREAD     ///< Subread (
   , CCS         ///< Circular consensus sequence
   , SCRAP       ///< Additional sequence (barcodes, adapters, etc.)
   , UNKNOWN     ///< Unknown read type
+
+  , POLYMERASE = ZMW ///< \deprecated as of PacBio BAM spec v 3.0.4 (use RecordType::ZMW instead)
 };
 
 /// \brief This enum defines the possible encoding modes used in Frames data
@@ -192,8 +195,11 @@ public:
     /// \returns integer value for this record's read group ID
     int32_t ReadGroupNumericId(void) const;
 
-    /// \returns this scrap record's ScrapType
-    VirtualRegionType ScrapType(void) const;
+    /// \returns this scrap record's scrap region type
+    VirtualRegionType ScrapRegionType(void) const;
+
+    /// \returns this scrap record's scrap ZMW type
+    ZmwType ScrapZmwType(void) const;
 
     /// \returns this record's average signal-to-noise for each of A, C, G,
     ///          and T
@@ -298,7 +304,7 @@ public:
     /// \throws std::runtime_error if barcode data is absent or malformed.
     /// \sa HasBarcodes
     ///
-    uint16_t BarcodeForward(void) const;
+    int16_t BarcodeForward(void) const;
 
     /// \returns barcode call confidence (Phred-scaled posterior probability
     ///          of correct barcode call)
@@ -312,14 +318,14 @@ public:
     /// \throws std::runtime_error if barcode data is absent or malformed.
     /// \sa HasBarcodes
     ///
-    uint16_t BarcodeReverse(void) const;
+    int16_t BarcodeReverse(void) const;
 
     /// \returns the forward and reverse barcode ids
     ///
     /// \throws std::runtime_error if barcode data is absent or malformed.
     /// \sa HasBarcodes
     ///
-    std::pair<uint16_t,uint16_t> Barcodes(void) const;
+    std::pair<int16_t,int16_t> Barcodes(void) const;
 
     /// \}
 
@@ -372,6 +378,12 @@ public:
     /// \returns true if this record has Pkmid data
     bool HasPkmid(void) const;
 
+    /// \returns true if this record has Pkmean2 data
+    bool HasPkmean2(void) const;
+
+    /// \returns true if this record has Pkmid2 data
+    bool HasPkmid2(void) const;
+
     /// \returns true if this record has PreBaseFrames aka IPD data
     bool HasPreBaseFrames(void) const;
 
@@ -399,8 +411,11 @@ public:
     /// \returns true if this record has QueryStart data
     bool HasQueryStart(void) const;
 
-    /// \returns true if this record has ScrapType data (only in SCRAP)
-    bool HasScrapType(void) const;
+    /// \returns true if this record has ScrapRegionType data (only in SCRAP)
+    bool HasScrapRegionType(void) const;
+
+    /// \returns true if this record has scrap ZMW type data (only in SCRAP)
+    bool HasScrapZmwType(void) const;
 
     /// \returns true if this record has signal-to-noise data (absent in
     ///          POLYMERASE)
@@ -635,20 +650,25 @@ public:
     std::vector<float> Pkmean(Orientation orientation = Orientation::NATIVE) const;
 
     /// \brief Fetches this record's Pkmid values ("pm" tag).
-    /// \note If \p aligned is true, and gaps/padding need to be inserted, the
-    ///       new frames will have a value of 0;
     ///
-    /// \param[in] orientation      Orientation of output.
-    /// \param[in] aligned          if true, gaps/padding will be inserted, per
-    ///                             Cigar info.
-    /// \param[in] exciseSoftClips  if true, any soft-clipped positions will be
-    ///                             removed from query ends
     /// \param[in] orientation     Orientation of output.
     /// \returns Pkmid as vector<float> object
     ///
-    std::vector<float> Pkmid(Orientation orientation = Orientation::NATIVE,
-                                  bool aligned = false,
-                                  bool exciseSoftClips = false) const;
+    std::vector<float> Pkmid(Orientation orientation = Orientation::NATIVE) const;
+
+    /// \brief Fetches this record's Pkmean2 values ("pi" tag).
+    ///
+    /// \param[in] orientation     Orientation of output.
+    /// \returns Pkmean as vector<float> object
+    ///
+    std::vector<float> Pkmean2(Orientation orientation = Orientation::NATIVE) const;
+
+    /// \brief Fetches this record's Pkmid2 values ("ps" tag).
+    ///
+    /// \param[in] orientation     Orientation of output.
+    /// \returns Pkmid as vector<float> object
+    ///
+    std::vector<float> Pkmid2(Orientation orientation = Orientation::NATIVE) const;
 
     /// \brief Fetches this record's PreBaseFrames aka IPD values ("ip" tag).
     ///
@@ -818,19 +838,33 @@ public:
     ///
     BamRecord& ReadGroupId(const std::string& id);
 
-    /// \brief Sets this scrap record's ScrapType
+    /// \brief Sets this scrap record's ScrapRegionType
     ///
     /// \param[in] type
     /// \returns reference to this record
     ///
-    BamRecord& ScrapType(const VirtualRegionType type);
+    BamRecord& ScrapRegionType(const VirtualRegionType type);
 
-    /// \brief Sets this scrap record's ScrapType
+    /// \brief Sets this scrap record's ScrapRegionType
     ///
     /// \param[in] type character equivalent of VirtualRegionType
     /// \returns reference to this record
     ///
-    BamRecord& ScrapType(const char type);
+    BamRecord& ScrapRegionType(const char type);
+
+    /// \brief Sets this scrap record's ScrapZmwType
+    ///
+    /// \param[in] type
+    /// \returns reference to this record
+    ///
+    BamRecord& ScrapZmwType(const ZmwType type);
+
+    /// \brief Sets this scrap record's ScrapZmwType
+    ///
+    /// \param[in] type character equivalent of ZmwType
+    /// \returns reference to this record
+    ///
+    BamRecord& ScrapZmwType(const char type);
 
     /// \brief Sets this record's average signal-to-noise in each of A, C, G,
     ///        and T
@@ -851,7 +885,7 @@ public:
     /// \param[in] barcodeIds
     /// \returns reference to this record
     ///
-    BamRecord& Barcodes(const std::pair<uint16_t,uint16_t>& barcodeIds);
+    BamRecord& Barcodes(const std::pair<int16_t, int16_t>& barcodeIds);
 
     /// \brief Sets this record's barcode quality ('bq' tag)
     ///
@@ -978,6 +1012,34 @@ public:
     /// \returns reference to this record
     ///
     BamRecord& Pkmid(const std::vector<uint16_t>& encodedPhotons);
+
+    /// \brief Sets this record's Pkmean2 values ("ps" tag).
+    ///
+    /// \param[in] photons
+    /// \returns reference to this record
+    ///
+    BamRecord& Pkmean2(const std::vector<float>& photons);
+
+    /// \brief Sets this record's Pkmean2 values ("ps" tag).
+    ///
+    /// \param[in] encodedPhotons
+    /// \returns reference to this record
+    ///
+    BamRecord& Pkmean2(const std::vector<uint16_t>& encodedPhotons);
+
+    /// \brief Sets this record's Pkmid2 values ("pi" tag).
+    ///
+    /// \param[in] photons
+    /// \returns reference to this record
+    ///
+    BamRecord& Pkmid2(const std::vector<float>& photons);
+
+    /// \brief Sets this record's Pkmid2 values ("pi" tag).
+    ///
+    /// \param[in] encodedPhotons
+    /// \returns reference to this record
+    ///
+    BamRecord& Pkmid2(const std::vector<uint16_t>& encodedPhotons);
 
     /// \brief Sets this record's PreBaseFrames aka IPD values ("ip" tag).
     ///
@@ -1142,9 +1204,7 @@ private:
 private:
     /// \internal
     std::vector<float> FetchPhotons(const std::string& tagName,
-                                    const Orientation orientation,
-                                    const bool aligned = false,
-                                    const bool exciseSoftClips = false) const;
+                                    const Orientation orientation) const;
     std::string FetchBasesRaw(const std::string& tagName) const;
 
     std::string FetchBases(const std::string& tagName,
@@ -1174,6 +1234,16 @@ private:
                                  const Orientation orientation,
                                  const bool aligned,
                                  const bool exciseSoftClips) const;
+
+    void ClipFields(const size_t clipPos, const size_t clipLength);
+    BamRecord& ClipToQuery(const PacBio::BAM::Position start,
+                           const PacBio::BAM::Position end);
+    BamRecord& ClipToReference(const PacBio::BAM::Position start,
+                               const PacBio::BAM::Position end);
+    BamRecord& ClipToReferenceForward(const PacBio::BAM::Position start,
+                                      const PacBio::BAM::Position end);
+    BamRecord& ClipToReferenceReverse(const PacBio::BAM::Position start,
+                                      const PacBio::BAM::Position end);
 
 private:
     // marked const to allow calling from const methods
@@ -1250,6 +1320,12 @@ public:
 
     /// \returns BamRecord::Pkmid with this view's parameters applied
     std::vector<float> Pkmid(void) const;
+
+    /// \returns BamRecord::Pkmean2 with this view's parameters applied
+    std::vector<float> Pkmean2(void) const;
+
+    /// \returns BamRecord::Pkmid2 with this view's parameters applied
+    std::vector<float> Pkmid2(void) const;
 
     /// \returns BamRecord::PreBaseFrames with this view's parameters applied
     Frames PrebaseFrames(void) const;

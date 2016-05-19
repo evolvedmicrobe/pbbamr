@@ -98,6 +98,40 @@ public:
     /// \}
 
 public:
+    /// \name Operators
+    /// \{
+
+    /// \brief Merges another header with this one.
+    ///
+    /// Headers must be compatible for merging. This means that their Version,
+    /// SortOrder, PacBioBamVersion (and in the case of aligned BAM data,
+    /// Sequences) must all match. If not, an exception will be thrown.
+    ///
+    /// \param[in] other  header to merge with this one
+    /// \returns reference to this header
+    ///
+    /// \throws std::runtime_error if the headers are not compatible
+    ///
+    BamHeader& operator+=(const BamHeader& other);
+
+    /// \brief Creates a new, merged header.
+    ///
+    /// Headers must be compatible for merging. This means that their Version,
+    /// SortOrder, PacBioBamVersion (and in the case of aligned BAM data,
+    /// Sequences) must all match. If not, an exception will be thrown.
+    ///
+    /// Both original headers (this header and \p other) will not be modified.
+    ///
+    /// \param[in] other  header to merge with this one
+    /// \returns merged header
+    ///
+    /// \throws std::runtime_error if the headers are not compatible
+    ///
+    BamHeader operator+(const BamHeader& other) const;
+
+    /// \}
+
+public:
     /// \name General Attributes
     /// \{
 
@@ -378,5 +412,7 @@ private:
 
 } // namespace BAM
 } // namespace PacBio
+
+#include "pbbam/internal/BamHeader.inl"
 
 #endif // BAMHEADER_H

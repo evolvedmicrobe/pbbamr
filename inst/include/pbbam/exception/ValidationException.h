@@ -34,41 +34,62 @@
 // SUCH DAMAGE.
 //
 // File Description
-/// \file PbiFile.cpp
-/// \brief Implements the PbiFile methods.
+/// \file ValidationException.h
+/// \brief Defines the ValidationException class.
 //
 // Author: Derek Barnett
 
-#include "pbbam/PbiFile.h"
-#include "pbbam/BamFile.h"
-#include "pbbam/PbiBuilder.h"
-#include "pbbam/BamReader.h"
-using namespace PacBio;
-using namespace PacBio::BAM;
-using namespace PacBio::BAM::PbiFile;
-using namespace std;
+#ifndef VALIDATIONEXCEPTION_H
+#define VALIDATIONEXCEPTION_H
+
+#include <map>
+#include <sstream>
+#include <stdexcept>
+#include <string>
+#include <vector>
 
 namespace PacBio {
 namespace BAM {
-namespace PbiFile {
 
-void CreateFrom(const BamFile& bamFile,
-                const PbiBuilder::CompressionLevel compressionLevel,
-                const size_t numThreads)
+/// \brief The ValidationExecption represents an exception that will be thrown
+///        when any error is encountered using the Validator API. In addition to
+///        a default display message, it provides programmatic access to all
+///        reported error messages.
+///
+/// \sa Validator::Validate(const BamRecord& record)
+///
+class ValidationException : public std::runtime_error
 {
-    PbiBuilder builder(bamFile.PacBioIndexFilename(),
-                       bamFile.Header().Sequences().size(),
-                       compressionLevel,
-                       numThreads);
-    BamReader reader(bamFile);
-    BamRecord b;
-    int64_t offset = reader.VirtualTell();
-    while (reader.GetNext(b)) {
-        builder.AddRecord(b, offset);
-        offset = reader.VirtualTell();
-    }
-}
+public:
+    typedef std::vector<std::string>         ErrorList;
+    typedef std::map<std::string, ErrorList> ErrorMap;
 
-} // namespace PbiFile
+public:
+    ValidationException(const ErrorMap& fileErrors,
+                        const ErrorMap& readGroupErrors,
+                        const ErrorMap& recordErrors);
+    ValidationException(ErrorMap&& fileErrors,
+                        ErrorMap&& readGroupErrors,
+                        ErrorMap&& recordErrors);
+
+public:
+    const ErrorMap& FileErrors(void) const;
+    const ErrorMap& ReadGroupErrors(void) const;
+    const ErrorMap& RecordErrors(void) const;
+
+    virtual const char* what(void) const noexcept;
+
+private:
+    ErrorMap fileErrors_;
+    ErrorMap readGroupErrors_;
+    ErrorMap recordErrors_;
+    std::string msg_;
+
+private:
+    void FormatMessage(void);
+};
+
 } // namespace BAM
 } // namespace PacBio
+
+#endif // VALIDATIONEXCEPTION_H

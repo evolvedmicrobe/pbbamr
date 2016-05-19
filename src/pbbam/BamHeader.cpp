@@ -41,6 +41,7 @@
 
 #include "pbbam/BamHeader.h"
 #include "StringUtils.h"
+#include "Version.h"
 #include <htslib/hts.h>
 #include <sstream>
 #include <set>
@@ -63,131 +64,51 @@ static const string token_VN = string("VN");
 static const string token_SO = string("SO");
 static const string token_pb = string("pb");
 
-class BamHeaderPrivate
+static
+void EnsureCanMerge(const BamHeader& lhs, const BamHeader& rhs)
 {
-public:
-    std::string version_;
-    std::string pacbioBamVersion_;
-    std::string sortOrder_;
-    std::map<std::string, std::string> headerLineCustom_;
+    // check compatibility
+    const bool samVersionOk = lhs.Version() == rhs.Version();
+    const bool sortOrderOk  = lhs.SortOrder() == rhs.SortOrder();
+    const bool pbVersionOk  = lhs.PacBioBamVersion() == rhs.PacBioBamVersion();
+    const bool sequencesOk  = ( (lhs.SortOrder() == "coordinate") ? lhs.Sequences() == rhs.Sequences()
+                                                                  : true);
 
-    std::map<std::string, ReadGroupInfo> readGroups_; // id => read group info
-    std::map<std::string, ProgramInfo> programs_;     // id => program info
-    std::vector<std::string> comments_;
+    // if all checks out, return
+    if (samVersionOk && sortOrderOk && pbVersionOk && sequencesOk)
+        return;
 
-    // we need to preserve insertion order, use lookup for access by name
-    std::vector<SequenceInfo> sequences_;
-    std::map<std::string, int32_t> sequenceIdLookup_;
-};
+    // else, format error message & throw
+    stringstream e;
+    e << "could not merge BAM headers:" << endl;
 
-struct PacBioVersion
-{
-public:
-    PacBioVersion(int major, int minor, int revision)
-        : major_(major)
-        , minor_(minor)
-        , revision_(revision)
-    { }
-
-    PacBioVersion(const string& v)
-        : major_(0)
-        , minor_(0)
-        , revision_(0)
-    {
-        if (v.empty()) {
-            auto msg = string{ "PacBio BAM version number is missing (@HD pb:<version> tag). See spec for details." };
-            throw std::runtime_error(msg);
-        }
-
-        if (v.find('b') != string::npos) {
-            auto msg = string{ "invalid version number (" + v + "): beta version BAMs are no longer supported" };
-            throw std::runtime_error(msg);
-        }
-
-        try {
-            const auto fields = Split(v, '.');
-            const auto numFields = fields.size();
-            if (numFields > 0) {
-                major_ = stoi(fields.at(0));
-                if (numFields > 1) {
-                    minor_ = stoi(fields.at(1));
-                    if (numFields > 2 )
-                        revision_ = stoi(fields.at(2));
-                }
-            }
-        } catch (std::exception&) {
-            auto msg = string{ "invalid version number (" + v + "): failed to parse" };
-            throw std::runtime_error(msg);
-        }
+    if (!samVersionOk) {
+        e << "  mismatched SAM versions (@HD:VN) : ("
+          << lhs.Version() << ", " << rhs.Version()
+          << ")" << endl;
     }
 
-public:
-    bool operator==(const PacBioVersion& other) const
-    {
-        return major_ == other.major_ &&
-               minor_ == other.minor_ &&
-               revision_ == other.revision_;
+    if (!sortOrderOk) {
+        e << "  mismatched sort orders (@HD:SO) : ("
+          << lhs.SortOrder() << ", " << rhs.SortOrder()
+          << ")" << endl;
     }
 
-    bool operator<(const PacBioVersion& other) const
-    {
-        // 2.* < 3.*
-        if (major_ < other.major_)
-            return true;
-
-        // 3. ==  3.
-        else if (major_ == other.major_) {
-
-            // 3.1.* < 3.2.*
-            if (minor_ < other.minor_)
-                return true;
-
-            // 3.2. == 3.2.
-            else if (minor_ == other.minor_) {
-
-                // 3.2.1 < 3.2.2
-                if (revision_ < other.revision_)
-                    return true;
-            }
-        }
-
-        // otherwise not less-than
-        return false;
-    }
-    bool operator>=(const PacBioVersion& other) const
-    { return !operator<(other); }
-
-public:
-    string ToString(void) const
-    {
-        stringstream s;
-        s << major_ << '.' << minor_ << '.' << revision_;
-        return s.str();
+    if (!pbVersionOk) {
+        e << "  mismatched PacBio BAM versions (@HD:pb) : ("
+          << lhs.PacBioBamVersion() << ", " << rhs.PacBioBamVersion()
+          << ")" << endl;
     }
 
-    string ToMsgString(void) const
-    {
-        stringstream s;
-        s << '(' << ToString() << ')';
-        return s.str();
-    }
+    if (!sequencesOk)
+        e << "  mismatched sequence lists (@SQ entries)" << endl;
 
-private:
-    int major_;
-    int minor_;
-    int revision_;
-};
-
-static const PacBioVersion minimum_version = PacBioVersion(3,0,1);
-static const PacBioVersion current_version = PacBioVersion(3,0,1);
+    throw std::runtime_error(e.str());
+}
 
 } // namespace internal
 } // namespace BAM
 } // namespace PacBio
-
-BamHeader::BamHeader(void)
-    : d_(new internal::BamHeaderPrivate)
-{ }
 
 BamHeader::BamHeader(const string& samHeaderText)
     : d_(new internal::BamHeaderPrivate)
@@ -237,30 +158,28 @@ BamHeader::BamHeader(const string& samHeaderText)
     }
 }
 
-BamHeader::BamHeader(const BamHeader& other)
-    : d_(other.d_)
-{ }
+BamHeader& BamHeader::operator+=(const BamHeader& other)
+{
+    internal::EnsureCanMerge(*this, other);
 
-BamHeader::BamHeader(BamHeader&& other)
-    : d_(std::move(other.d_))
-{ }
+    // merge read groups
+    for (const auto& rg : other.ReadGroups()) {
+        if (!HasReadGroup(rg.Id()))
+            AddReadGroup(rg);
+    }
 
-BamHeader& BamHeader::operator=(const BamHeader& other)
-{ d_ = other.d_; return *this; }
+    // merge programs
+    for (const auto& pg : other.Programs()) {
+        if (!HasProgram(pg.Id()))
+            AddProgram(pg);
+    }
 
-BamHeader& BamHeader::operator=(BamHeader&& other)
-{ d_ = std::move(other.d_); return *this; }
+    // merge comments
+    for (const auto& comment : other.Comments())
+        AddComment(comment);
 
-BamHeader::~BamHeader(void) { }
-
-BamHeader& BamHeader::AddComment(const std::string& comment)
-{ d_->comments_.push_back(comment); return *this; }
-
-BamHeader& BamHeader::AddProgram(const ProgramInfo& pg)
-{ d_->programs_[pg.Id()] = pg; return *this; }
-
-BamHeader& BamHeader::AddReadGroup(const ReadGroupInfo& readGroup)
-{ d_->readGroups_[readGroup.Id()] = readGroup; return *this; }
+    return *this;
+}
 
 BamHeader& BamHeader::AddSequence(const SequenceInfo& sequence)
 {
@@ -269,27 +188,12 @@ BamHeader& BamHeader::AddSequence(const SequenceInfo& sequence)
     return *this;
 }
 
-BamHeader& BamHeader::ClearComments(void)
-{ d_->comments_.clear(); return* this; }
-
-BamHeader& BamHeader::ClearPrograms(void)
-{ d_->programs_.clear(); return *this; }
-
-BamHeader& BamHeader::ClearReadGroups(void)
-{ d_->readGroups_.clear(); return *this; }
-
 BamHeader& BamHeader::ClearSequences(void)
 {
     d_->sequenceIdLookup_.clear();
     d_->sequences_.clear();
     return *this;
 }
-
-std::vector<std::string> BamHeader::Comments(void) const
-{ return d_->comments_; }
-
-BamHeader& BamHeader::Comments(const std::vector<std::string>& comments)
-{ d_->comments_ = comments; return *this; }
 
 BamHeader BamHeader::DeepCopy(void) const
 {
@@ -306,29 +210,15 @@ BamHeader BamHeader::DeepCopy(void) const
     return result;
 }
 
-bool BamHeader::HasProgram(const std::string& id) const
-{ return d_->programs_.find(id) != d_->programs_.cend(); }
-
-bool BamHeader::HasReadGroup(const std::string& id) const
-{ return d_->readGroups_.find(id) != d_->readGroups_.cend(); }
-
-bool BamHeader::HasSequence(const std::string& name) const
-{ return d_->sequenceIdLookup_.find(name) != d_->sequenceIdLookup_.cend(); }
-
-std::string BamHeader::PacBioBamVersion(void) const
-{ return d_->pacbioBamVersion_; }
-
 BamHeader& BamHeader::PacBioBamVersion(const std::string& version)
 {
-    const auto fileVersion = internal::PacBioVersion{ version };
-    if (fileVersion >= internal::minimum_version)
-        d_->pacbioBamVersion_ = version;
-    else {
-        d_->pacbioBamVersion_.clear();
+    d_->pacbioBamVersion_ = version;
+    const auto fileVersion = internal::Version{ version };
+    if (fileVersion < internal::Version::Minimum) {
         auto msg  = string{ "invalid PacBio BAM version number" };
-             msg += fileVersion.ToMsgString();
+             msg += ( "(" + fileVersion.ToString() + ")");
              msg += string{ "is older than the minimum supported version" };
-             msg += internal::minimum_version.ToMsgString();
+             msg += ( "(" + internal::Version::Minimum.ToString() + ")");
         throw std::runtime_error(msg);
     }
     return *this;
@@ -410,15 +300,6 @@ BamHeader& BamHeader::ReadGroups(const vector<ReadGroupInfo>& readGroups)
     return *this;
 }
 
-SequenceInfo BamHeader::Sequence(const int32_t id) const
-{
-    // throws out of range
-    return d_->sequences_.at(id);
-}
-
-size_t BamHeader::NumSequences(void) const
-{ return d_->sequences_.size(); }
-
 SequenceInfo BamHeader::Sequence(const std::string& name) const
 {
     // TODO: SequenceId(name) throws if not found, should we do so here as well?
@@ -439,12 +320,6 @@ int32_t BamHeader::SequenceId(const std::string& name) const
     return iter->second;
 }
 
-std::string BamHeader::SequenceLength(const int32_t id) const
-{ return Sequence(id).Length(); }
-
-std::string BamHeader::SequenceName(const int32_t id) const
-{ return Sequence(id).Name(); }
-
 vector<string> BamHeader::SequenceNames(void) const
 {
     vector<string> result;
@@ -456,9 +331,6 @@ vector<string> BamHeader::SequenceNames(void) const
     return result;
 }
 
-std::vector<SequenceInfo> BamHeader::Sequences(void) const
-{ return d_->sequences_; }
-
 BamHeader& BamHeader::Sequences(const vector<SequenceInfo>& sequences)
 {
     d_->sequences_.clear();
@@ -467,21 +339,15 @@ BamHeader& BamHeader::Sequences(const vector<SequenceInfo>& sequences)
     return *this;
 }
 
-std::string BamHeader::SortOrder(void) const
-{ return d_->sortOrder_; }
-
-BamHeader& BamHeader::SortOrder(const std::string& order)
-{ d_->sortOrder_ = order; return *this; }
-
 string BamHeader::ToSam(void) const
 {
-    // clear out stream
+    // init stream
     stringstream out("");
 
     // @HD
-    const string& outputVersion   = (d_->version_.empty()   ? string(hts_version()) : d_->version_);
+    const string& outputVersion   = (d_->version_.empty() ? string(hts_version()) : d_->version_);
     const string& outputSortOrder = (d_->sortOrder_.empty() ? string("unknown") : d_->sortOrder_);
-    const string& outputPbBamVersion = (d_->pacbioBamVersion_.empty() ? internal::current_version.ToString()
+    const string& outputPbBamVersion = (d_->pacbioBamVersion_.empty() ? internal::Version::Current.ToString()
                                                                       : d_->pacbioBamVersion_);
 
     out << internal::prefix_HD
@@ -489,10 +355,6 @@ string BamHeader::ToSam(void) const
         << internal::MakeSamTag(internal::token_SO, outputSortOrder)
         << internal::MakeSamTag(internal::token_pb, outputPbBamVersion)
         << endl;
-
-//    if (!d_->pacbioBamVersion_.empty())
-//        out << internal::MakeSamTag(internal::token_pb, d_->pacbioBamVersion_);
-//     out << endl;
 
     // @SQ
     for (const SequenceInfo& seq : d_->sequences_)
@@ -504,7 +366,7 @@ string BamHeader::ToSam(void) const
 
     // @PG
     for (const auto& progIter : d_->programs_)
-        out  << progIter.second.ToSam() << endl;
+        out << progIter.second.ToSam() << endl;
 
     // @CO
     for (const string& comment : d_->comments_)
@@ -513,9 +375,3 @@ string BamHeader::ToSam(void) const
     // return result
     return out.str();
 }
-
-std::string BamHeader::Version(void) const
-{ return d_->version_; }
-
-BamHeader& BamHeader::Version(const std::string& version)
-{ d_->version_ = version; return *this; }

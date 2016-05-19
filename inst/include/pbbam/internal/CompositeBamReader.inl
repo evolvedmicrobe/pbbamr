@@ -43,6 +43,8 @@
 #include "pbbam/CompositeBamReader.h"
 #include <algorithm>
 #include <set>
+#include <sstream>
+#include <stdexcept>
 
 namespace PacBio {
 namespace BAM {
@@ -95,32 +97,18 @@ inline GenomicIntervalCompositeBamReader::GenomicIntervalCompositeBamReader(cons
                                                                             const std::vector<BamFile>& bamFiles)
 {
     filenames_.reserve(bamFiles.size());
-    for (auto&& bamFile : bamFiles) {
+    for(const auto& bamFile : bamFiles)
         filenames_.push_back(bamFile.Filename());
-        if (bamFile.StandardIndexExists()) {
-            auto item = internal::CompositeMergeItem{ std::unique_ptr<BamReader>{ new BaiIndexedBamReader{ interval, bamFile} } };
-            if (item.reader->GetNext(item.record))
-                mergeItems_.push_back(std::move(item));
-        }
-        // handle PBI-backed interval searches as well
-    }
-    UpdateSort();
+    Interval(interval);
 }
 
 inline GenomicIntervalCompositeBamReader::GenomicIntervalCompositeBamReader(const GenomicInterval& interval,
                                                                             std::vector<BamFile>&& bamFiles)
 {
     filenames_.reserve(bamFiles.size());
-    for (auto&& bamFile : bamFiles) {
+    for(auto&& bamFile : bamFiles)
         filenames_.push_back(bamFile.Filename());
-        if (bamFile.StandardIndexExists()) {
-            auto item = internal::CompositeMergeItem{ std::unique_ptr<BamReader>{ new BaiIndexedBamReader{ interval, std::move(bamFile) } } };
-            if (item.reader->GetNext(item.record))
-                mergeItems_.push_back(std::move(item));
-        }
-        // handle PBI-backed interval searches as well
-    }
-    UpdateSort();
+    Interval(interval);
 }
 
 inline GenomicIntervalCompositeBamReader::GenomicIntervalCompositeBamReader(const GenomicInterval& interval,
@@ -185,13 +173,28 @@ inline GenomicIntervalCompositeBamReader& GenomicIntervalCompositeBamReader::Int
     }
 
     // create readers for files that were not 'active' for the previous
+    std::vector<std::string> missingBai;
     for (auto&& fn : filesToCreate) {
         auto bamFile = BamFile{ fn };
         if (bamFile.StandardIndexExists()) {
             auto item = internal::CompositeMergeItem{ std::unique_ptr<BamReader>{ new BaiIndexedBamReader{ interval, std::move(bamFile) } } };
             if (item.reader->GetNext(item.record))
                 updatedMergeItems.push_back(std::move(item));
+            // else not an error, simply no data matching interval
         }
+        else {
+            // maybe handle PBI-backed interval searches if BAI missing, but for now treat as error
+            missingBai.push_back(bamFile.Filename());
+        }
+    }
+
+    // throw if any files missing BAI
+    if (!missingBai.empty()) {
+        std::stringstream e;
+        e << "failed to open GenomicIntervalCompositeBamReader because the following files are missing a BAI file:" << std::endl;
+        for (const auto& fn : missingBai)
+            e << "  " << fn << std::endl;
+        throw std::runtime_error(e.str());
     }
 
     // update our actual container and return
@@ -240,33 +243,23 @@ inline void GenomicIntervalCompositeBamReader::UpdateSort(void)
 // ------------------------------
 
 template<typename OrderByType>
-inline PbiFilterCompositeBamReader<OrderByType>::PbiFilterCompositeBamReader(const PbiFilter &filter,
+inline PbiFilterCompositeBamReader<OrderByType>::PbiFilterCompositeBamReader(const PbiFilter& filter,
                                                                              const std::vector<BamFile>& bamFiles)
 {
     filenames_.reserve(bamFiles.size());
-    for (auto&& bamFile : bamFiles) {
+    for(const auto& bamFile : bamFiles)
         filenames_.push_back(bamFile.Filename());
-        if (bamFile.PacBioIndexExists()) {
-            auto item = value_type{ std::unique_ptr<BamReader>{ new PbiIndexedBamReader{ filter, bamFile } } };
-            if (item.reader->GetNext(item.record))
-                mergeQueue_.push_back(std::move(item));
-        }
-    }
+    Filter(filter);
 }
 
 template<typename OrderByType>
-inline PbiFilterCompositeBamReader<OrderByType>::PbiFilterCompositeBamReader(const PbiFilter &filter,
+inline PbiFilterCompositeBamReader<OrderByType>::PbiFilterCompositeBamReader(const PbiFilter& filter,
                                                                              std::vector<BamFile>&& bamFiles)
 {
     filenames_.reserve(bamFiles.size());
-    for (auto&& bamFile : bamFiles) {
+    for(auto&& bamFile : bamFiles)
         filenames_.push_back(bamFile.Filename());
-        if (bamFile.PacBioIndexExists()) {
-            auto item = value_type{ std::unique_ptr<BamReader>{ new PbiIndexedBamReader{ filter, std::move(bamFile) } } };
-            if (item.reader->GetNext(item.record))
-                mergeQueue_.push_back(std::move(item));
-        }
-    }
+    Filter(filter);
 }
 
 template<typename OrderByType>
@@ -332,13 +325,26 @@ PbiFilterCompositeBamReader<OrderByType>::Filter(const PbiFilter& filter)
     }
 
     // create readers for files that were not 'active' for the previous
+    std::vector<std::string> missingPbi;
     for (auto&& fn : filesToCreate) {
         auto bamFile = BamFile{ fn };
         if (bamFile.PacBioIndexExists()) {
             auto item = internal::CompositeMergeItem{ std::unique_ptr<BamReader>{ new PbiIndexedBamReader{ filter, std::move(bamFile) } } };
             if (item.reader->GetNext(item.record))
                 updatedMergeItems.push_back(std::move(item));
+            // else not an error, simply no data matching filter
         }
+        else
+            missingPbi.push_back(fn);
+    }
+
+    // throw if any files missing PBI
+    if (!missingPbi.empty()) {
+        std::stringstream e;
+        e << "failed to open PbiFilterCompositeBamReader because the following files are missing a PBI file:" << std::endl;
+        for (const auto& fn : missingPbi)
+            e << "  " << fn << std::endl;
+        throw std::runtime_error(e.str());
     }
 
     // update our actual container and return

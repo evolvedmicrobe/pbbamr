@@ -32,43 +32,65 @@
 // OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
 // OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 // SUCH DAMAGE.
-//
-// File Description
-/// \file PbiFile.cpp
-/// \brief Implements the PbiFile methods.
-//
+
 // Author: Derek Barnett
 
-#include "pbbam/PbiFile.h"
-#include "pbbam/BamFile.h"
-#include "pbbam/PbiBuilder.h"
-#include "pbbam/BamReader.h"
-using namespace PacBio;
-using namespace PacBio::BAM;
-using namespace PacBio::BAM::PbiFile;
-using namespace std;
+#ifndef FILEPRODUCER_H
+#define FILEPRODUCER_H
+
+#include <string>
+#include <stdio.h>
 
 namespace PacBio {
 namespace BAM {
-namespace PbiFile {
+namespace internal {
 
-void CreateFrom(const BamFile& bamFile,
-                const PbiBuilder::CompressionLevel compressionLevel,
-                const size_t numThreads)
-{
-    PbiBuilder builder(bamFile.PacBioIndexFilename(),
-                       bamFile.Header().Sequences().size(),
-                       compressionLevel,
-                       numThreads);
-    BamReader reader(bamFile);
-    BamRecord b;
-    int64_t offset = reader.VirtualTell();
-    while (reader.GetNext(b)) {
-        builder.AddRecord(b, offset);
-        offset = reader.VirtualTell();
-    }
-}
+// The FileProducer class provides functionality for working with a temp
+// file until successful destruction of a FileProducer-derived class.
+//
+// Derived classes should be sure to flush/close the temp file, and the
+// FileProducer's destructor will ensure that the temp file will be renamed to
+// the target filename.
+//
+// If destruction is triggered by an exception, no renaming will occur.
+//
+class FileProducer {
 
-} // namespace PbiFile
+protected:
+    FileProducer(void) = delete;
+
+    // Initializes FileProducer with specified target filename. Temp filename is
+    // set to target filename plus ".tmp" suffix.
+    FileProducer(const std::string& targetFilename);
+
+    // Initializes FileProducer with specified target filename & explicit temp
+    // filename.
+    FileProducer(const std::string& targetFilename,
+                 const std::string& tempFilename);
+
+    // Renames temp file to target filename.
+    //
+    // Derived classes should ensure that data is flushed and file handle closed
+    // before or during their destructor.
+    //
+    // Remaming will not occur if there is a 'live' exception being thrown.
+    //
+    ~FileProducer(void);
+
+protected:
+    const std::string& TargetFilename(void) const
+    { return targetFilename_; }
+
+    const std::string& TempFilename(void) const
+    { return tempFilename_; }
+
+private:
+    std::string targetFilename_;
+    std::string tempFilename_;
+};
+
+} // namespace internal
 } // namespace BAM
 } // namespace PacBio
+
+#endif // FILEPRODUCER_H

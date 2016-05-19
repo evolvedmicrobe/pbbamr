@@ -55,14 +55,19 @@ set( PacBioBAM_H
     ${PacBioBAM_IncludeDir}/pbbam/Tag.h
     ${PacBioBAM_IncludeDir}/pbbam/TagCollection.h
 #    ${PacBioBAM_IncludeDir}/pbbam/UnmappedReadsQuery.h
+    ${PacBioBAM_IncludeDir}/pbbam/Validator.h
     ${PacBioBAM_IncludeDir}/pbbam/ZmwGroupQuery.h
     ${PacBioBAM_IncludeDir}/pbbam/ZmwQuery.h
+    ${PacBioBAM_IncludeDir}/pbbam/ZmwType.h
+    ${PacBioBAM_IncludeDir}/pbbam/ZmwTypeMap.h
 
     # exception headers
     ${PacBioBAM_IncludeDir}/pbbam/exception/InvalidSequencingChemistryException.h
+    ${PacBioBAM_IncludeDir}/pbbam/exception/ValidationException.h
 
     # API-internal headers & inline files
     ${PacBioBAM_IncludeDir}/pbbam/internal/Accuracy.inl
+    ${PacBioBAM_IncludeDir}/pbbam/internal/BamHeader.inl
     ${PacBioBAM_IncludeDir}/pbbam/internal/BamRecord.inl
     ${PacBioBAM_IncludeDir}/pbbam/internal/BamRecordBuilder.inl
     ${PacBioBAM_IncludeDir}/pbbam/internal/BamRecordImpl.inl
@@ -95,6 +100,7 @@ set( PacBioBAM_H
     ${PacBioBAM_IncludeDir}/pbbam/internal/ReadGroupInfo.inl
     ${PacBioBAM_IncludeDir}/pbbam/internal/SequenceInfo.inl
     ${PacBioBAM_IncludeDir}/pbbam/internal/Tag.inl
+    ${PacBioBAM_IncludeDir}/pbbam/internal/Validator.inl
 
     # virtual headers
     ${PacBioBAM_IncludeDir}/pbbam/virtual/VirtualPolymeraseBamRecord.h
@@ -103,6 +109,9 @@ set( PacBioBAM_H
     ${PacBioBAM_IncludeDir}/pbbam/virtual/VirtualRegion.h
     ${PacBioBAM_IncludeDir}/pbbam/virtual/VirtualRegionType.h
     ${PacBioBAM_IncludeDir}/pbbam/virtual/VirtualRegionTypeMap.h
+    ${PacBioBAM_IncludeDir}/pbbam/virtual/VirtualZmwBamRecord.h
+    ${PacBioBAM_IncludeDir}/pbbam/virtual/WhitelistedZmwReadStitcher.h
+    ${PacBioBAM_IncludeDir}/pbbam/virtual/ZmwReadStitcher.h
     ${PacBioBAM_IncludeDir}/pbbam/virtual/ZmwWhitelistVirtualReader.h
 
     # library-internal headers
@@ -110,6 +119,7 @@ set( PacBioBAM_H
     ${PacBioBAM_SourceDir}/ChemistryTable.h
     ${PacBioBAM_SourceDir}/DataSetIO.h
     ${PacBioBAM_SourceDir}/DataSetUtils.h
+    ${PacBioBAM_SourceDir}/FileProducer.h
     ${PacBioBAM_SourceDir}/FileUtils.h
     ${PacBioBAM_SourceDir}/FofnReader.h
     ${PacBioBAM_SourceDir}/MemoryUtils.h
@@ -117,6 +127,10 @@ set( PacBioBAM_H
     ${PacBioBAM_SourceDir}/SequenceUtils.h
     ${PacBioBAM_SourceDir}/StringUtils.h
     ${PacBioBAM_SourceDir}/TimeUtils.h
+    ${PacBioBAM_SourceDir}/ValidationErrors.h
+    ${PacBioBAM_SourceDir}/Version.h
+    ${PacBioBAM_SourceDir}/VirtualZmwCompositeReader.h
+    ${PacBioBAM_SourceDir}/VirtualZmwReader.h
     ${PacBioBAM_SourceDir}/XmlReader.h
     ${PacBioBAM_SourceDir}/XmlWriter.h
     ${PacBioBAM_SourceDir}/pugixml/pugiconfig.hpp
@@ -151,6 +165,7 @@ set( PacBioBAM_CPP
     ${PacBioBAM_SourceDir}/DataSetTypes.cpp
     ${PacBioBAM_SourceDir}/DataSetXsd.cpp
     ${PacBioBAM_SourceDir}/EntireFileQuery.cpp
+    ${PacBioBAM_SourceDir}/FileProducer.cpp
     ${PacBioBAM_SourceDir}/FileUtils.cpp
     ${PacBioBAM_SourceDir}/FofnReader.cpp
     ${PacBioBAM_SourceDir}/Frames.cpp
@@ -178,15 +193,21 @@ set( PacBioBAM_CPP
     ${PacBioBAM_SourceDir}/Tag.cpp
     ${PacBioBAM_SourceDir}/TagCollection.cpp
 #    ${PacBioBAM_SourceDir}/UnmappedReadsQuery.cpp
-    ${PacBioBAM_SourceDir}/VirtualPolymeraseBamRecord.cpp
-    ${PacBioBAM_SourceDir}/VirtualPolymeraseCompositeReader.cpp
-    ${PacBioBAM_SourceDir}/VirtualPolymeraseReader.cpp
+    ${PacBioBAM_SourceDir}/Validator.cpp
+    ${PacBioBAM_SourceDir}/ValidationErrors.cpp
+    ${PacBioBAM_SourceDir}/ValidationException.cpp
+    ${PacBioBAM_SourceDir}/Version.cpp
+    ${PacBioBAM_SourceDir}/VirtualZmwBamRecord.cpp
+    ${PacBioBAM_SourceDir}/VirtualZmwCompositeReader.cpp
+    ${PacBioBAM_SourceDir}/VirtualZmwReader.cpp
     ${PacBioBAM_SourceDir}/VirtualRegionTypeMap.cpp
     ${PacBioBAM_SourceDir}/XmlReader.cpp
     ${PacBioBAM_SourceDir}/XmlWriter.cpp
+    ${PacBioBAM_SourceDir}/WhitelistedZmwReadStitcher.cpp
     ${PacBioBAM_SourceDir}/ZmwGroupQuery.cpp
+    ${PacBioBAM_SourceDir}/ZmwReadStitcher.cpp
     ${PacBioBAM_SourceDir}/ZmwQuery.cpp
-    ${PacBioBAM_SourceDir}/ZmwWhitelistVirtualReader.cpp
+    ${PacBioBAM_SourceDir}/ZmwTypeMap.cpp
 
     # XML I/O
     ${PacBioBAM_SourceDir}/pugixml/pugixml.cpp

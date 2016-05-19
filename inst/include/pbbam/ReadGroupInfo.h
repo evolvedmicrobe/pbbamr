@@ -67,6 +67,8 @@ enum class BaseFeature
   , PULSE_WIDTH
   , PKMID
   , PKMEAN
+  , PKMID2
+  , PKMEAN2
   , LABEL
   , LABEL_QV
   , ALT_LABEL
@@ -111,6 +113,18 @@ enum class BarcodeQualityType
     NONE
   , SCORE
   , PROBABILITY
+};
+
+/// \brief This enum describes the instrument type / platform model,
+///        within a read group's records.
+///
+/// This information is stored in its description (\@RG:PM).
+///
+enum class PlatformModelType
+{
+    ASTRO
+  , RS
+  , SEQUEL
 };
 
 /// \brief The ReadGroupInfo class represents a read group entry (\@RG) in the
@@ -181,6 +195,19 @@ public:
     ///
     ReadGroupInfo(const std::string& movieName,
                   const std::string& readType);
+
+    /// \brief Creates a read group info object from a movie name, read type,
+    ///        and platform model.
+    ///
+    /// \param[in] movieName    sequencing movie name
+    /// \param[in] readType     string version of record type
+    /// \param[in] platform     platform model type
+    ///
+    /// \sa RecordType
+    ///
+    ReadGroupInfo(const std::string& movieName,
+                  const std::string& readType,
+                  const PlatformModelType platform);
 
     ReadGroupInfo(const ReadGroupInfo& other);
     ReadGroupInfo(ReadGroupInfo&& other);
@@ -306,6 +333,9 @@ public:
 
     /// \returns string value of \@RG:PL
     std::string Platform(void) const;
+
+    /// \returns string value of \@RG:PM
+    PlatformModelType PlatformModel(void) const;
 
     /// \returns string value of \@RG:PI
     std::string PredictedInsertSize(void) const;
@@ -489,6 +519,13 @@ public:
     ///
     ReadGroupInfo& Programs(const std::string& programs);
 
+    /// \brief Sets the value for \@RG:PM
+    ///
+    /// \param[in] platformModel new value
+    /// \returns reference to this object
+    ///
+    ReadGroupInfo& PlatformModel(const PlatformModelType& platform);
+
     /// \brief Sets the codec type used for PulseWidth
     ///
     /// \param[in] codec    codec type
@@ -539,6 +576,8 @@ private:
     std::string predictedInsertSize_;   // PI
     std::string movieName_;             // PU
     std::string sample_;                // SM
+
+    PlatformModelType platformModel_;   // PM
 
     // DS:<Description> components
     std::string readType_;

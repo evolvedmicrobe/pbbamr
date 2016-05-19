@@ -44,6 +44,20 @@
 namespace PacBio {
 namespace BAM {
 
+inline bool SequenceInfo::operator==(const SequenceInfo& other) const
+{
+    return assemblyId_ == other.assemblyId_ &&
+           checksum_   == other.checksum_   &&
+           length_     == other.length_     &&
+           name_       == other.name_       &&
+           species_    == other.species_    &&
+           uri_        == other.uri_        &&
+           custom_     == other.custom_;
+}
+
+inline bool SequenceInfo::operator!=(const SequenceInfo& other) const
+{ return !(*this == other); }
+
 inline std::string SequenceInfo::AssemblyId(void) const
 { return assemblyId_; }
 

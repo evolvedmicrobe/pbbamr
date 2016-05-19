@@ -34,41 +34,20 @@
 // SUCH DAMAGE.
 //
 // File Description
-/// \file PbiFile.cpp
-/// \brief Implements the PbiFile methods.
+/// \file ZmwTypeMap.cpp
+/// \brief Implements the ZmwTypeMap class.
 //
-// Author: Derek Barnett
+// Author: Armin Töpfer
 
-#include "pbbam/PbiFile.h"
-#include "pbbam/BamFile.h"
-#include "pbbam/PbiBuilder.h"
-#include "pbbam/BamReader.h"
+#include "pbbam/ZmwTypeMap.h"
+
 using namespace PacBio;
 using namespace PacBio::BAM;
-using namespace PacBio::BAM::PbiFile;
-using namespace std;
 
-namespace PacBio {
-namespace BAM {
-namespace PbiFile {
-
-void CreateFrom(const BamFile& bamFile,
-                const PbiBuilder::CompressionLevel compressionLevel,
-                const size_t numThreads)
+std::map<char, ZmwType> ZmwTypeMap::ParseChar
 {
-    PbiBuilder builder(bamFile.PacBioIndexFilename(),
-                       bamFile.Header().Sequences().size(),
-                       compressionLevel,
-                       numThreads);
-    BamReader reader(bamFile);
-    BamRecord b;
-    int64_t offset = reader.VirtualTell();
-    while (reader.GetNext(b)) {
-        builder.AddRecord(b, offset);
-        offset = reader.VirtualTell();
-    }
-}
-
-} // namespace PbiFile
-} // namespace BAM
-} // namespace PacBio
+	{ 'C' , ZmwType::CONTROL   },
+	{ 'M' , ZmwType::MALFORMED },
+	{ 'N' , ZmwType::NORMAL    },
+	{ 'S' , ZmwType::SENTINEL  }
+};
