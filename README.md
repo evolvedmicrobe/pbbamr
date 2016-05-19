@@ -1,4 +1,4 @@
-#pbbamr
+#pbbamr [![CircleCI](https://circleci.com/gh/PacificBiosciences/pbbamr.svg?style=svg)](https://circleci.com/gh/PacificBiosciences/pbbamr)
 
 An R library to view and examine PacBio BAM format files.  Cannot be used on 
 windows computers.
