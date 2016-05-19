@@ -8,7 +8,7 @@ ffile = "lambdaNEB.fa"
 ofile = "loadedAln.Rd"
 
 test_that("dataMatches", {
-  d = loadpbi(bfile)
+  d = loadPBI(bfile)
   head(d)
   aln = loadDataAtOffsets(d$offset, bfile, ffile)
   #org_aln = aln
@@ -20,6 +20,6 @@ test_that("dataMatches", {
 })
 
 test_that("headerMatches", {
-  d = loadheader(bfile)
+  d = loadHeader(bfile)
   expect_equal(as.numeric(as.character(d$sequences$length[1])), 48502)
 })
