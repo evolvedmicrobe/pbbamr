@@ -257,55 +257,73 @@ void ClipAndGapifyBases(const BamRecordImpl& impl,
 }
 
 static
-void ClipAndGapifyFrames(const BamRecordImpl& impl,
-                         const bool aligned,
-                         const bool exciseSoftClips,
-                         Frames* frames)
-{
+  void ClipAndGapifyFrames(const BamRecordImpl& impl,
+                           const bool aligned,
+                           const bool exciseSoftClips,
+                           Frames* frames)
+  {
     assert(frames);
 
     if (impl.IsMapped() && (aligned || exciseSoftClips)) {
 
-        auto data = std::move(frames->Data()); // we're going to put it back
-        size_t frameIndex = 0;
-        const auto cigar = impl.CigarData();
-        auto cigarIter = cigar.cbegin();
-        auto cigarEnd  = cigar.cend();
-        for (; cigarIter != cigarEnd; ++cigarIter) {
-            const auto op = (*cigarIter);
-            const auto type = op.Type();
-
-            // do nothing for hard clips
-            if (type != CigarOperationType::HARD_CLIP) {
-                const auto opLength = op.Length();
-
-                // maybe remove soft clips
-                if (type == CigarOperationType::SOFT_CLIP && exciseSoftClips) {
-                    data.erase(data.begin() + frameIndex,
-                               data.begin() + frameIndex + opLength);
-                }
-
-                // for non-clipping operations
-                else {
-
-                    // maybe add gaps/padding
-                    if (aligned) {
-                        if (type == CigarOperationType::DELETION ||
-                            type == CigarOperationType::PADDING)
-                        {
-                            data.reserve(data.size() + opLength);
-                            data.insert(data.begin() + frameIndex, opLength, 0);
-                        }
-                    }
-
-                    // update index
-                    frameIndex += opLength;
-                }
-            }
+      // Determine the final size of the gapped/clipped sequence.
+      const auto cigar = impl.CigarData();
+      auto cigarIter = cigar.cbegin();
+      auto cigarEnd  = cigar.cend();
+      size_t alnLength = 0;
+      for (; cigarIter != cigarEnd; ++cigarIter) {
+        const auto op = (*cigarIter);
+        const auto type = op.Type();
+        if (type == CigarOperationType::HARD_CLIP) {
+          continue;
+        } else if (type == CigarOperationType::SOFT_CLIP && exciseSoftClips) {
+          continue;
+        } else if (!aligned &&
+          (type == CigarOperationType::DELETION ||
+          type == CigarOperationType::PADDING)) {
+          continue;
         }
-        frames->Data(data);
+        else {
+          alnLength += op.Length();
+        }
+      }
+
+      auto old_data = std::move(frames->Data()); // We'll replace it
+      vector<uint16_t> new_data(alnLength);
+      size_t old_index = 0;
+      size_t new_index = 0;
+      for (cigarIter = cigar.cbegin(); cigarIter != cigarEnd; ++cigarIter) {
+        const auto op = (*cigarIter);
+        const auto type = op.Type();
+        const auto opLength = op.Length();
+
+        // do nothing for hard clips
+        if (type == CigarOperationType::HARD_CLIP ||
+            (type == CigarOperationType::SOFT_CLIP && exciseSoftClips)) {
+          old_index += opLength;
+        } else if(type == CigarOperationType::SOFT_CLIP ||
+          type == CigarOperationType::ALIGNMENT_MATCH ||
+          type == CigarOperationType::SEQUENCE_MATCH ||
+          type == CigarOperationType::SEQUENCE_MISMATCH ||
+          type == CigarOperationType::INSERTION) {
+          for (int i = 0; i < opLength; i++) {
+            new_data[new_index + i] = old_data[old_index + i];
+          }
+          old_index += opLength;
+          new_index += opLength;
+        } else if (aligned && (type == CigarOperationType::DELETION ||
+          type == CigarOperationType::PADDING))
+        {
+          for(int i=0; i< opLength; i++) {
+            new_data[new_index + i] = 0;
+          }
+          new_index += opLength;
+        }
+      }
+      frames->Data(new_data);
     }
-}
+  }
+
 
 
 static
@@ -573,7 +591,7 @@ void BamRecord::CalculateAlignedPositions(void) const
     const RecordType type  = Type();
     const Position qStart  = (type == RecordType::CCS) ? Position(0) : QueryStart();
     const Position qEnd    = (type == RecordType::CCS) ? Position(seqLength) : QueryEnd();
-    
+
     if (qStart == PacBio::BAM::UnmappedPosition || qEnd == PacBio::BAM::UnmappedPosition)
         return;
 
@@ -1505,7 +1523,7 @@ pair<size_t, size_t> BamRecord::NumMatchesAndMismatches(void) const
 size_t BamRecord::NumMismatches(void) const
 { return NumMatchesAndMismatches().second; }
 
-Frames BamRecord::PreBaseFrames(Orientation orientation, 
+Frames BamRecord::PreBaseFrames(Orientation orientation,
                                 bool aligned,
                                 bool exciseSoftClips) const
 { return IPD(orientation, aligned, exciseSoftClips); }
