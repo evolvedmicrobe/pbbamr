@@ -477,9 +477,9 @@ List loadDataAtOffsets(CharacterVector offsets, std::string bamName, std::string
         std::string ref = fasta.ReferenceSubsequence(r, orientation, true, true);
         if (seq.size() != ref.size())
           throw std::runtime_error("Sequence and reference parts are of different size");
-
-        DataFrame df = DataFrame::create(Named("read") = createFactorFromSeqString(seq),
-                                         Named("ref") = createFactorFromSeqString(ref));
+  // make this a list
+        auto df = List::create(Named("read") = createFactorFromSeqString(seq),
+                               Named("ref") = createFactorFromSeqString(ref));
 
         if (r.HasIPD()) {
             auto ipds = r.IPD(Orientation::NATIVE, true, true).Data();
