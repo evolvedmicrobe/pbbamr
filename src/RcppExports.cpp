@@ -5,6 +5,28 @@
 
 using namespace Rcpp;
 
+// getFastaFileNameFromDatasetFile
+std::string getFastaFileNameFromDatasetFile(std::string dataset_name);
+RcppExport SEXP pbbamr_getFastaFileNameFromDatasetFile(SEXP dataset_nameSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< std::string >::type dataset_name(dataset_nameSEXP);
+    __result = Rcpp::wrap(getFastaFileNameFromDatasetFile(dataset_name));
+    return __result;
+END_RCPP
+}
+// getBAMNameFromDatasetFile
+std::string getBAMNameFromDatasetFile(std::string dataset_name);
+RcppExport SEXP pbbamr_getBAMNameFromDatasetFile(SEXP dataset_nameSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< std::string >::type dataset_name(dataset_nameSEXP);
+    __result = Rcpp::wrap(getBAMNameFromDatasetFile(dataset_name));
+    return __result;
+END_RCPP
+}
 // loadHeader
 List loadHeader(std::string filename);
 RcppExport SEXP pbbamr_loadHeader(SEXP filenameSEXP) {
