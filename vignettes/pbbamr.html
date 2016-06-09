@@ -492,10 +492,10 @@ knitr::<span class="kw">kable</span>(<span class="kw">head</span>(alns[<span cla
 </div>
 <div id="getting-header-information" class="section level2">
 <h2>Getting header information</h2>
-<p>You can obtain most of the information available in the header simply by calling the loadheader function.</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">header =<span class="st"> </span><span class="kw">loadheader</span>(ibamname)
+<p>You can obtain most of the information available in the header simply by calling the loadHeader function.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">header =<span class="st"> </span><span class="kw">loadHeader</span>(ibamname)
 <span class="co"># Print out some of the items available in the list</span>
-knitr::<span class="kw">kable</span>(header$version)</code></pre></div>
+knitr::<span class="kw">kable</span>(header$version, col.names = 'version')</code></pre></div>
 <table>
 <tbody>
 <tr class="odd">
