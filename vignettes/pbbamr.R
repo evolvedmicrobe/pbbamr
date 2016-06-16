@@ -87,9 +87,9 @@ knitr::kable(head(alns[1:6,]))
 ggplot(alns[alns$pkmid!=0,], aes(x=pkmid, fill=read)) + geom_density(alpha=.5) + theme_classic()
 
 ## ---- echo=TRUE, results='asis'------------------------------------------
-header = loadheader(ibamname)
+header = loadHeader(ibamname)
 # Print out some of the items available in the list
-knitr::kable(header$version)
+knitr::kable(header$version, col.names = 'version')
 knitr::kable(header$readgroups)
 knitr::kable(header$sequences)
 knitr::kable(header$programs)
