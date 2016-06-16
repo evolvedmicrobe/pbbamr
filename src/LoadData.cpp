@@ -64,8 +64,11 @@ IntegerVector createFactorFromSeqString(const std::string& seq) {
     case 'N':
     case 'n':
         v[i] = 6;
-      default:
-        throw new std::out_of_range("Character was not an A, C, G, T, N or -");
+        break;
+    default:
+        std::string msg = "Character was not an A, C, G, T, N or -. Check that the data you are loading "
+                          "(BAM or Reference Fasta) does not contain weird characters.  Strange Character was: ";
+        Rcpp::stop(msg + bp);
       }
   }
   v.attr("class") = "factor";
@@ -86,7 +89,7 @@ IntegerVector createDinucleotideFactorFromSeqs(const IntegerVector& curBP,
     auto offset = cur == nxt ? 0 : 4;
     // Expensive check that can probably be removed?
     if ( cur < 0 || cur > 4 || nxt < 0 || nxt > 4) {
-        throw std::runtime_error("Can't make context factor with basepairs outside of 0-4");
+        Rcpp::stop("Can't make context factor with basepairs outside of 0-4");
     }
     ctx[i] = offset + nxt;
   }
@@ -105,7 +108,7 @@ std::vector<size_t> _findBreakPoints(const std::string& read,
                                      int newWindowSize) {
 
   if (read.length() != ref.length()) {
-    throw std::runtime_error("Read and reference had different lengths!");
+    Rcpp::stop("Read and reference had different lengths!");
   }
   std::vector<size_t> breaks;
 
@@ -138,7 +141,7 @@ std::pair<std::string, std::string> _sampleAndTrimSeqs(const std::string& read,
                                                        int trimToLength) {
 
   if (read.length() != ref.length()) {
-    throw std::runtime_error("Read and reference had different lengths!");
+    Rcpp::stop("Read and reference had different lengths!");
   }
   // Sample down if needed
   auto n = read.length();
@@ -176,7 +179,7 @@ std::pair<std::string, std::string> _sampleAndTrimSeqs(const std::string& read,
       read[endRow-1] == '-' || ref[endRow-1] == '-' ||  // we might have gone all the way to the end
       read[startRow+1] == '-' || ref[startRow+1] == '-' ||
       endRow - startRow < 10) {
-    throw new std::runtime_error("Trying to sample reads down wound up with \
+    Rcpp::stop("Trying to sample reads down wound up with \
                                   a sequence of size < 10 or an alignment that \
                                   started/ended with a gap at or immediately \
                                   adjacent to the end.  Are there a lot of \
@@ -476,7 +479,7 @@ List loadDataAtOffsets(CharacterVector offsets, std::string bamName, std::string
         std::string seq = r.Sequence(orientation, true, true);
         std::string ref = fasta.ReferenceSubsequence(r, orientation, true, true);
         if (seq.size() != ref.size())
-          throw std::runtime_error("Sequence and reference parts are of different size");
+          Rcpp::stop("Sequence and reference parts are of different size");
   // make this a list
         auto df = List::create(Named("read") = createFactorFromSeqString(seq),
                                Named("ref") = createFactorFromSeqString(ref));
@@ -516,7 +519,7 @@ List loadDataAtOffsets(CharacterVector offsets, std::string bamName, std::string
         results[i] = df;
         continue;
       } else{
-        throw new std::out_of_range("No BAM record found at the given offset");
+        Rcpp::stop("No BAM record found at the given offset");
       }
     }
     return results;
@@ -563,7 +566,7 @@ List loadSubreadsAtOffsets(CharacterVector offsets, std::string bamName) {
                                   Named("read") = seq);
         results[i] = fseq;
       } else{
-        throw new std::out_of_range("No BAM record found at the given offset");
+        Rcpp::stop("No BAM record found at the given offset");
       }
     }
     return results;
@@ -697,7 +700,7 @@ List loadHMMfromBAM(CharacterVector offsets,
         results[i] = val;
         continue;
       } else{
-        throw new std::out_of_range("No BAM record found at the given offset");
+        Rcpp::stop("No BAM record found at the given offset");
       }
     }
     return results;
@@ -711,7 +714,7 @@ List loadHMMfromBAM(CharacterVector offsets,
   List _generatePairFromString(const std::string& read, const std::string& ref, size_t brk1, size_t brk2) {
     // we should always have a break occur at a position with a matching base before, so we will grab that
     if (brk1 < 1) {
-      throw new std::runtime_error("Break specified before 1! Shouldn't be possible as we require two matching bases at each breakpoint");
+      Rcpp::stop("Break specified before 1! Shouldn't be possible as we require two matching bases at each breakpoint");
     }
     auto len = brk2 - brk1;
     auto new_read = read.substr(brk1, len);
@@ -790,7 +793,7 @@ List loadSingleZmwHMMfromBAM(CharacterVector offsets,
         std::string ref = fasta.ReferenceSubsequence(r, orientation, true, true);
         auto breaks = _findBreakPoints(read, ref, windowBreakSize);
         if (breaks.size() ==0) {
-          throw new std::runtime_error("Could not find any break points in read pair.");
+          Rcpp::stop("Could not find any break points in read pair.");
         }
         else {
           List results(breaks.size() - 1);
@@ -803,7 +806,7 @@ List loadSingleZmwHMMfromBAM(CharacterVector offsets,
     }
     else
     {
-        throw new std::out_of_range("No BAM record found at the given offset");
+        Rcpp::stop("No BAM record found at the given offset");
     }
     } catch (std::exception &ex) {
     forward_exception_to_r(ex);
