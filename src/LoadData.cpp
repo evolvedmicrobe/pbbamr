@@ -346,7 +346,7 @@ DataFrame loadPBI(std::string filename,
     df["tend"] = mappedData.tEnd_;
     df["astart"] = mappedData.aStart_;
     df["aend"] = mappedData.aEnd_;
-    df["rc"] = mappedData.revStrand_;
+    df["rc"] = LogicalVector(mappedData.revStrand_.begin(), mappedData.revStrand_.end());
     df["matches"] = mappedData.nM_;
     df["mismatches"] = mappedData.nMM_;
     // Convert to int to avoid raw vector assignment.
