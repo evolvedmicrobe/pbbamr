@@ -1,4 +1,4 @@
-CFLAGS=-fPIC -Wall -I../../inst/include/ --std=c++11 -Wno-deprecated-register -Wno-unused-local-typedefs
+CFLAGS=-fPIC -g -O2 -Wall -I../../inst/include/ --std=c++11 -Wno-deprecated-register -Wno-unused-local-typedefs
 
 # Should be equivalent to your list of C files, if you don't build selectively
 #SRC=$(wildcard *.cpp)
@@ -13,7 +13,7 @@ XML_OBJ_FILES := $(CPP_FILES:.cpp=.o)
 
 # $@ - The name of the target
 # $^ - All dependencies
-# %.o - wildcard matching, 
+# %.o - wildcard matching,
 # See http://www.cprogramming.com/tutorial/makefiles_continued.html
 
 libpbbam.a: $(OBJ_FILES) pugixml.o
