@@ -32,40 +32,39 @@
 // OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
 // OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 // SUCH DAMAGE.
+//
+// File Description
+/// \file MD5.cpp
+/// \brief Implements basic MD5 hash utilities
+//
+// Author: Brett Bowman
 
-// Author: Lance Hepler
-
-#include "ChemistryTable.h"
+#include "pbbam/MD5.h"
+#include <cram/md5.h>
 
 namespace PacBio {
 namespace BAM {
-namespace internal {
 
-extern const std::vector<std::array<std::string, 4>> ChemistryTable = {
+/// \brief MD5 hash of a string as a 32-digit hexadecimal string
+///
+std::string MD5Hash(const std::string& str)
+{
+    MD5_CTX md5;
+    unsigned char digest[16];
+    char hexdigest[33];
 
-    // BindingKit, SequencingKit, BasecallerVersion, Chemistry
+    MD5_Init(&md5);
+    MD5_Update(&md5, reinterpret_cast<void*>(const_cast<char*>(str.c_str())), str.size());
+    MD5_Final(digest, &md5);
 
-    // RS
-    {{"100356300",   "100356200",   "2.1", "P6-C4"}},
-    {{"100356300",   "100356200",   "2.3", "P6-C4"}},
-    {{"100356300",   "100612400",   "2.1", "P6-C4"}},
-    {{"100356300",   "100612400",   "2.3", "P6-C4"}},
-    {{"100372700",   "100356200",   "2.1", "P6-C4"}},
-    {{"100372700",   "100356200",   "2.3", "P6-C4"}},
-    {{"100372700",   "100612400",   "2.1", "P6-C4"}},
-    {{"100372700",   "100612400",   "2.3", "P6-C4"}},
+    for (int i = 0; i < 16; ++i)
+        sprintf(&hexdigest[2*i], "%02x", digest[i]);
 
-    // 3.0 ("Dromedary"): S/P1-C1/beta
-    {{"100-619-300", "100-620-000", "3.0", "S/P1-C1/beta"}},
-    {{"100-619-300", "100-620-000", "3.1", "S/P1-C1/beta"}},
+   return std::string{hexdigest, 32};
+}
 
-    // 3.1 ("Echidna"): S/P1-C1.1
-    {{"100-619-300", "100-867-300", "3.1", "S/P1-C1.1"}},
-
-    // 3.1.1 ("Flea"): S/P1-C1.2
-    {{"100-619-300", "100-902-100", "3.1", "S/P1-C1.2"}}
-};
-
-} // namespace internal
 } // namespace BAM
 } // namespace PacBio
+
+
+

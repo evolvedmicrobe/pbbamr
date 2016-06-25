@@ -257,73 +257,55 @@ void ClipAndGapifyBases(const BamRecordImpl& impl,
 }
 
 static
-  void ClipAndGapifyFrames(const BamRecordImpl& impl,
-                           const bool aligned,
-                           const bool exciseSoftClips,
-                           Frames* frames)
-  {
+void ClipAndGapifyFrames(const BamRecordImpl& impl,
+                         const bool aligned,
+                         const bool exciseSoftClips,
+                         Frames* frames)
+{
     assert(frames);
 
     if (impl.IsMapped() && (aligned || exciseSoftClips)) {
 
-      // Determine the final size of the gapped/clipped sequence.
-      const auto cigar = impl.CigarData();
-      auto cigarIter = cigar.cbegin();
-      auto cigarEnd  = cigar.cend();
-      size_t alnLength = 0;
-      for (; cigarIter != cigarEnd; ++cigarIter) {
-        const auto op = (*cigarIter);
-        const auto type = op.Type();
-        if (type == CigarOperationType::HARD_CLIP) {
-          continue;
-        } else if (type == CigarOperationType::SOFT_CLIP && exciseSoftClips) {
-          continue;
-        } else if (!aligned &&
-          (type == CigarOperationType::DELETION ||
-          type == CigarOperationType::PADDING)) {
-          continue;
-        }
-        else {
-          alnLength += op.Length();
-        }
-      }
+        auto data = std::move(frames->Data()); // we're going to put it back
+        size_t frameIndex = 0;
+        const auto cigar = impl.CigarData();
+        auto cigarIter = cigar.cbegin();
+        auto cigarEnd  = cigar.cend();
+        for (; cigarIter != cigarEnd; ++cigarIter) {
+            const auto op = (*cigarIter);
+            const auto type = op.Type();
 
-      auto old_data = std::move(frames->Data()); // We'll replace it
-      vector<uint16_t> new_data(alnLength);
-      size_t old_index = 0;
-      size_t new_index = 0;
-      for (cigarIter = cigar.cbegin(); cigarIter != cigarEnd; ++cigarIter) {
-        const auto op = (*cigarIter);
-        const auto type = op.Type();
-        const auto opLength = op.Length();
+            // do nothing for hard clips
+            if (type != CigarOperationType::HARD_CLIP) {
+                const auto opLength = op.Length();
 
-        // do nothing for hard clips
-        if (type == CigarOperationType::HARD_CLIP ||
-            (type == CigarOperationType::SOFT_CLIP && exciseSoftClips)) {
-          old_index += opLength;
-        } else if(type == CigarOperationType::SOFT_CLIP ||
-          type == CigarOperationType::ALIGNMENT_MATCH ||
-          type == CigarOperationType::SEQUENCE_MATCH ||
-          type == CigarOperationType::SEQUENCE_MISMATCH ||
-          type == CigarOperationType::INSERTION) {
-          for (int i = 0; i < opLength; i++) {
-            new_data[new_index + i] = old_data[old_index + i];
-          }
-          old_index += opLength;
-          new_index += opLength;
-        } else if (aligned && (type == CigarOperationType::DELETION ||
-          type == CigarOperationType::PADDING))
-        {
-          for(int i=0; i< opLength; i++) {
-            new_data[new_index + i] = 0;
-          }
-          new_index += opLength;
+                // maybe remove soft clips
+                if (type == CigarOperationType::SOFT_CLIP && exciseSoftClips) {
+                    data.erase(data.begin() + frameIndex,
+                               data.begin() + frameIndex + opLength);
+                }
+
+                // for non-clipping operations
+                else {
+
+                    // maybe add gaps/padding
+                    if (aligned) {
+                        if (type == CigarOperationType::DELETION ||
+                            type == CigarOperationType::PADDING)
+                        {
+                            data.reserve(data.size() + opLength);
+                            data.insert(data.begin() + frameIndex, opLength, 0);
+                        }
+                    }
+
+                    // update index
+                    frameIndex += opLength;
+                }
+            }
         }
-      }
-      frames->Data(new_data);
+        frames->Data(data);
     }
-  }
-
+}
 
 
 static
@@ -591,7 +573,7 @@ void BamRecord::CalculateAlignedPositions(void) const
     const RecordType type  = Type();
     const Position qStart  = (type == RecordType::CCS) ? Position(0) : QueryStart();
     const Position qEnd    = (type == RecordType::CCS) ? Position(seqLength) : QueryEnd();
-
+    
     if (qStart == PacBio::BAM::UnmappedPosition || qEnd == PacBio::BAM::UnmappedPosition)
         return;
 
@@ -652,8 +634,8 @@ void BamRecord::ClipFields(const size_t clipFrom,
     const bool isForwardStrand = (AlignedStrand() == Strand::FORWARD);
 
     // clip seq, quals
-    string sequence = std::move(internal::Clip(Sequence(Orientation::NATIVE), clipFrom, clipLength));
-    QualityValues qualities = std::move(internal::Clip(Qualities(Orientation::NATIVE), clipFrom, clipLength));
+    string sequence = internal::Clip(Sequence(Orientation::NATIVE), clipFrom, clipLength);
+    QualityValues qualities = internal::Clip(Qualities(Orientation::NATIVE), clipFrom, clipLength);
     if (!isForwardStrand) {
         internal::ReverseComplement(sequence);
         internal::Reverse(qualities);
@@ -725,7 +707,7 @@ BamRecord& BamRecord::ClipToQuery(const Position start,
     if (IsMapped()) {
 
         // fetch a 'working copy' of CIGAR data
-        Cigar cigar = std::move(impl_.CigarData());
+        Cigar cigar = impl_.CigarData();
 
         // clip leading CIGAR ops
         size_t referencePositionOffset = 0;
@@ -838,7 +820,7 @@ BamRecord& BamRecord::ClipToReferenceForward(const PacBio::BAM::Position start,
     const Position newTEnd   = std::min(origTEnd, end);
 
     // fetch a 'working copy' of CIGAR data
-    Cigar cigar = std::move(impl_.CigarData());
+    Cigar cigar = impl_.CigarData();
 
     // we're going to skip query sequence outside aligned region
     size_t queryPosRemovedFront = 0;
@@ -968,7 +950,7 @@ BamRecord& BamRecord::ClipToReferenceReverse(const PacBio::BAM::Position start,
     const Position newTStart = std::max(origTStart, start);
     const Position newTEnd   = std::min(origTEnd, end);
 
-    Cigar cigar = std::move(impl_.CigarData());
+    Cigar cigar = impl_.CigarData();
 
     size_t queryPosRemovedFront = 0;
     size_t queryPosRemovedBack  = 0;
@@ -1137,10 +1119,10 @@ string BamRecord::FetchBases(const string& tagName,
     string bases;
     Orientation current;
     if (isBamSeq) { // SEQ stored in genomic orientation
-        bases = std::move(impl_.Sequence());
+        bases = impl_.Sequence();
         current = Orientation::GENOMIC;
     } else { // all tags stored in native orientation
-        bases = std::move(FetchBasesRaw(tagName));
+        bases = FetchBasesRaw(tagName);
         current = Orientation::NATIVE;
     }
 
@@ -1180,15 +1162,14 @@ Frames BamRecord::FetchFramesRaw(const string& tagName) const
 
     // lossy frame codes
     if (frameTag.IsUInt8Array()) {
-        const vector<uint8_t> codes = std::move(frameTag.ToUInt8Array());
-        frames = std::move(Frames::Decode(codes));
+        const vector<uint8_t> codes = frameTag.ToUInt8Array();
+        frames = Frames::Decode(codes);
     }
 
     // lossless frame data
     else {
         assert(frameTag.IsUInt16Array());
-        const vector<uint16_t> losslessFrames = std::move(frameTag.ToUInt16Array());
-        frames.Data(std::move(losslessFrames));
+        frames.Data(frameTag.ToUInt16Array());
     }
 
     return frames;
@@ -1240,7 +1221,7 @@ vector<float> BamRecord::FetchPhotons(const string& tagName,
         return vector<float>();
     if(!frameTag.IsUInt16Array())
         throw std::runtime_error("Photons are not a uint16_t array, tag " + tagName);
-    vector<uint16_t> data = std::move(frameTag.ToUInt16Array());
+    vector<uint16_t> data = frameTag.ToUInt16Array();
 
     // put in requested orientation
     internal::OrientTagDataAsRequested(&data,
@@ -1278,10 +1259,10 @@ QualityValues BamRecord::FetchQualities(const string& tagName,
     QualityValues quals;
     Orientation current;
     if (isBamQual) { // QUAL stored in genomic orientation
-        quals = std::move(impl_.Qualities());
+        quals = impl_.Qualities();
         current = Orientation::GENOMIC;
     } else {        // all tags stored in native orientation
-        quals = std::move(FetchQualitiesRaw(tagName));
+        quals = FetchQualitiesRaw(tagName);
         current = Orientation::NATIVE;
     }
 
@@ -1523,7 +1504,7 @@ pair<size_t, size_t> BamRecord::NumMatchesAndMismatches(void) const
 size_t BamRecord::NumMismatches(void) const
 { return NumMatchesAndMismatches().second; }
 
-Frames BamRecord::PreBaseFrames(Orientation orientation,
+Frames BamRecord::PreBaseFrames(Orientation orientation, 
                                 bool aligned,
                                 bool exciseSoftClips) const
 { return IPD(orientation, aligned, exciseSoftClips); }
@@ -1543,7 +1524,7 @@ Frames BamRecord::IPDRaw(Orientation orientation) const
 
     // lossy frame codes
     if (frameTag.IsUInt8Array()) {
-        const vector<uint8_t> codes = std::move(frameTag.ToUInt8Array());
+        const vector<uint8_t> codes = frameTag.ToUInt8Array();
         const vector<uint16_t> codes16(codes.begin(), codes.end());
         frames.Data(std::move(codes16));
     }
@@ -1551,8 +1532,7 @@ Frames BamRecord::IPDRaw(Orientation orientation) const
     // lossless frame data
     else {
         assert(frameTag.IsUInt16Array());
-        const vector<uint16_t> losslessFrames = std::move(frameTag.ToUInt16Array());
-        frames.Data(std::move(losslessFrames));
+        frames.Data(frameTag.ToUInt16Array());
     }
 
     // return in requested orientation
@@ -1574,7 +1554,7 @@ Frames BamRecord::PulseWidthRaw(Orientation orientation) const
 
     // lossy frame codes
     if (frameTag.IsUInt8Array()) {
-        const vector<uint8_t> codes = std::move(frameTag.ToUInt8Array());
+        const vector<uint8_t> codes = frameTag.ToUInt8Array();
         const vector<uint16_t> codes16(codes.begin(), codes.end());
         frames.Data(std::move(codes16));
     }
@@ -1582,8 +1562,7 @@ Frames BamRecord::PulseWidthRaw(Orientation orientation) const
     // lossless frame data
     else {
         assert(frameTag.IsUInt16Array());
-        const vector<uint16_t> losslessFrames = std::move(frameTag.ToUInt16Array());
-        frames.Data(std::move(losslessFrames));
+        frames.Data(frameTag.ToUInt16Array());
     }
 
     // return in requested orientation
