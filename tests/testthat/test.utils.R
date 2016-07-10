@@ -23,3 +23,14 @@ test_that("combineDataFrames", {
   all = combineConditions(l, cnames)
   expect_equal(levels(all$Condition), cnames)
 })
+
+test_that("phredConversions", {
+  # Simple combine with a name vector
+  res  = toPhred(10 ^ (-(1:4)), 1e-3)
+  expect_equal(res, c(10, 20, 30, 30))
+
+
+  res = fromPhred(seq(10, 70, 10), 1e-5)
+  expect_equal(res, c(1e-01, 1e-02, 1e-03, 1e-04, 1e-05, 1e-05, 1e-05))
+})
+

@@ -49,3 +49,30 @@ combineConditions <- function(dfs, cond_names = names(dfs)) {
   nd$Condition = Condition
   nd
 }
+
+#' Function converts to Phred Scale, capping the error at a specified minimum
+#'
+#' @param errRate The error rate observed
+#' @param minError The minimum allowed error rate.
+#' @return A vector of phred scaled error rates
+#' @examples
+#' toPhred(10 ^ (-(1:4)), 1e-3)
+#' @export
+toPhred <- function(errRates, minError = -Inf) {
+  clampedRates = sapply(errRates, max, minError)
+  (-10 * log10(clampedRates))
+}
+
+#' Function converts from Phred to error rate
+#'
+#' @param qv The QVs associated with each value
+#' @param minError The minimum allowed error rate.
+#' @return A vector of error rates
+#' @examples
+#' fromPhred(seq(10, 70, 10), 1e-5)
+#' @export
+fromPhred <- function(qv, minError) {
+  tmp = 10 ^ (-qv / 10)
+  sapply(tmp, max, minError)
+}
+
