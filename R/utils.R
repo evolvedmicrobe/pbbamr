@@ -15,15 +15,24 @@ chkClass <- function(var, classname, msg) {
 #' Useful for combining different datasets and analyzing them.
 #'
 #' @param dfs A list of data frames to combine
-#' @param names A character vector of strings that will be used to identify each
-#' dataset.
+#' @param cond_names A character vector of strings that will be used to identify each
+#' dataset.  If missing, the names of the list elements are used
+#' @examples
+#' # Using two arguments and a separate vector of names
+#' ad = list(df1, df2)
+#' nms = c("myFirst", "mySecond")
+#' all = combineConditions(ad, nms)
+#'
+#' # Using one argument and the names of variables
+#' ad = list(myFirst = df1, mySecond = df2)
+#' all = combineConditions(ad)
 #' @export
-combineConditions <- function(dfs, names) {
+combineConditions <- function(dfs, cond_names = names(dfs)) {
   # Verify args
-  if (length(dfs) != length(names)) {
+  if (length(dfs) != length(cond_names)) {
     stop("Names must be the same size as the number of data frames.")
   }
-  chkClass(names, "character", "Names for data frames must be a character frame.")
+  chkClass(cond_names, "character", "Names for data frames must be a character frame.")
   chkClass(dfs, "list", "Data frames must be a list")
   ncols = sapply(dfs, ncol)
   if (length(unique(ncols)) != 1) {
@@ -33,9 +42,9 @@ combineConditions <- function(dfs, names) {
     stop("Can't create a condition column as it already exists.")
   }
   n = length(dfs)
-  Condition = Condition = factor(as.vector(
-    unlist(sapply(1:n, function(i) rep(names[i], nrow(dfs[[i]]))))
-  ), levels = unique(names))
+  Condition = factor(as.vector(
+    unlist(sapply(1:n, function(i) rep(cond_names[i], nrow(dfs[[i]]))))
+  ), levels = unique(cond_names))
   nd = data.table::rbindlist(dfs)
   nd$Condition = Condition
   nd
