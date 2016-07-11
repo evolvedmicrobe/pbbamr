@@ -34,3 +34,11 @@ test_that("phredConversions", {
   expect_equal(res, c(1e-01, 1e-02, 1e-03, 1e-04, 1e-05, 1e-05, 1e-05))
 })
 
+test_that("holeNumberConversions", {
+  hole = 50 * (2^16) + 95
+  x = getHoleX(hole)
+  expect_equal(x, 50)
+  y = getHoleY(hole)
+  expect_equal(y, 95)
+})
+

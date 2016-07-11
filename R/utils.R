@@ -76,3 +76,21 @@ fromPhred <- function(qv, minError) {
   sapply(tmp, max, minError)
 }
 
+#' Convert a holeNumber into the X coordinate on the chip.
+#'
+#' Only applies to Sequel data where the hole number is
+#' X << 16 & Y
+#' @param holeNumber the ZMW hole number
+#' @export
+getHoleX <- function(holeNumber)  {
+  holeNumber %/% 65536
+}
+
+#' Convert a hole number into the Y coordinate on the chip.
+#'
+#' Only applies to Sequel data where the hole number is
+#' X << 16 & Y
+#' @param holeNumber the ZMW hole number
+getHoleY = function(holeNumber) {
+  holeNumber %% 65536
+}
