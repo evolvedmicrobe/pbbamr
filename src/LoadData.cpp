@@ -511,7 +511,11 @@ List loadDataAtOffsets(CharacterVector offsets, std::string bamName, std::string
         }
 
         if(r.HasPkmid()) {
-          df["pkmid"] = r.Pkmid(Orientation::NATIVE);
+          df["pkmid"] = r.Pkmid(Orientation::NATIVE, true, true);
+        }
+
+        if (r.HasStartFrame()) {
+          df["sf"] = r.StartFrame(Orientation::NATIVE, true, true);
         }
 
         df.attr("class") = "data.frame";
