@@ -512,7 +512,7 @@ List loadDataAtOffsets(CharacterVector offsets, std::string bamName, std::string
 
         // Both are on hold pending bug fix #33721
         if(r.HasPkmid()) {
-          df["pkmid"] = r.Pkmid(Orientation::NATIVE);
+          df["pkmid"] = r.Pkmid(Orientation::NATIVE, true, true);
         }
 
         if (r.HasStartFrame()) {

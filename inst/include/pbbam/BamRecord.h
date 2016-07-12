@@ -656,6 +656,26 @@ public:
     ///
     std::vector<float> Pkmid(Orientation orientation = Orientation::NATIVE) const;
 
+    /// \name Pkmid Data
+    /// \{
+
+    /// \brief Fetches this record's Pkmid values
+    ///
+    /// \note If \p aligned is true, and gaps/padding need to be inserted, the
+    ///       new Pkmids will have a value of 0;
+    ///
+    /// \param[in] orientation      Orientation of output.
+    /// \param[in] aligned          if true, gaps/padding will be inserted, per
+    ///                             Cigar info.
+    /// \param[in] exciseSoftClips  if true, any soft-clipped positions will be
+    ///                             removed from query ends
+    ///
+    /// \returns Pkmid as vector<float>
+    ///
+    std::vector<float> Pkmid(Orientation orientation,
+                             bool aligned,
+                             bool exciseSoftClips) const;
+
     /// \brief Fetches this record's Pkmean2 values ("pi" tag).
     ///
     /// \param[in] orientation     Orientation of output.
@@ -1219,8 +1239,16 @@ private:
 
 private:
     /// \internal
+    std::vector<float> FetchPhotonsRaw(const std::string& tagName) const;
+
     std::vector<float> FetchPhotons(const std::string& tagName,
                                     const Orientation orientation) const;
+
+    std::vector<float> FetchPhotons(const std::string& tagName,
+                                               const Orientation orientation,
+                                               const bool aligned,
+                                               const bool exciseSoftClips) const;
+
     std::string FetchBasesRaw(const std::string& tagName) const;
 
     std::string FetchBases(const std::string& tagName,

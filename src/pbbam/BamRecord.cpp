@@ -1149,30 +1149,62 @@ Frames BamRecord::FetchFrames(const string& tagName,
     return frames;
 }
 
+vector<float> BamRecord::FetchPhotonsRaw(const string& tagName) const {
+  const Tag& frameTag = impl_.TagValue(tagName);
+  if (frameTag.IsNull())
+    return vector<float>();
+  if(!frameTag.IsUInt16Array())
+    throw std::runtime_error("Photons are not a uint16_t array, tag " + tagName);
+  vector<uint16_t> data = frameTag.ToUInt16Array();
+
+  vector<float> photons;
+  photons.reserve(data.size());
+  for (const auto& d : data)
+    photons.emplace_back(d / photonFactor);
+  return photons;
+
+}
+
+
 vector<float> BamRecord::FetchPhotons(const string& tagName,
                                       const Orientation orientation) const
 {
-    // fetch tag data
-    const Tag& frameTag = impl_.TagValue(tagName);
-    if (frameTag.IsNull())
-        return vector<float>();
-    if(!frameTag.IsUInt16Array())
-        throw std::runtime_error("Photons are not a uint16_t array, tag " + tagName);
-    vector<uint16_t> data = frameTag.ToUInt16Array();
-
-    // put in requested orientation
-    internal::OrientTagDataAsRequested(&data,
-                                       Orientation::NATIVE,     // current
-                                       orientation,             // requested
-                                       impl_.IsReverseStrand());
-
-    // store & return result
-    vector<float> photons;
-    photons.reserve(data.size());
-    for (const auto& d : data)
-        photons.emplace_back(d / photonFactor);
-    return photons;
+  return FetchPhotons(tagName, orientation, false, false);
 }
+
+vector<float> BamRecord::FetchPhotons(const string& tagName,
+                                      const Orientation orientation,
+                                      const bool aligned,
+                                      const bool exciseSoftClips) const
+{
+  // fetch raw
+  auto data = FetchPhotonsRaw(tagName);
+  Orientation current = Orientation::NATIVE;
+
+  if (aligned || exciseSoftClips) {
+
+    // force into genomic orientation
+    internal::OrientTagDataAsRequested(&data,
+                                       current,
+                                       Orientation::GENOMIC,
+                                       impl_.IsReverseStrand());
+    current = Orientation::GENOMIC;
+
+    // clip & gapify as requested
+    internal::ClipAndGapify<std::vector<float>*, float>(impl_,
+                                  aligned,
+                                  exciseSoftClips,
+                                  &data, 0, 0);
+  }
+
+  // return in the orientation requested
+  internal::OrientTagDataAsRequested(&data,
+                                     current,
+                                     orientation,
+                                     impl_.IsReverseStrand());
+  return data;
+}
+
 
 QualityValues BamRecord::FetchQualitiesRaw(const string& tagName) const
 {
@@ -1680,6 +1712,15 @@ BamRecord& BamRecord::Pkmean(const std::vector<uint16_t>& encodedPhotons)
 
 std::vector<float> BamRecord::Pkmid(Orientation orientation) const
 { return FetchPhotons(internal::tagName_pkmid, orientation); }
+
+std::vector<float> BamRecord::Pkmid(Orientation orientation,
+                                    bool aligned,
+                                    bool exciseSoftClips) const {
+  return FetchPhotons(internal::tagName_pkmid,
+                    orientation,
+                    aligned,
+                    exciseSoftClips);
+}
 
 BamRecord& BamRecord::Pkmid(const std::vector<float>& photons)
 {
