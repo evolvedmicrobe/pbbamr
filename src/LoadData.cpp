@@ -510,8 +510,13 @@ List loadDataAtOffsets(CharacterVector offsets, std::string bamName, std::string
           df["snrT"] = rep(snrs[3], seq.size());
         }
 
+        // Both are on hold pending bug fix #33721
         if(r.HasPkmid()) {
           df["pkmid"] = r.Pkmid(Orientation::NATIVE);
+        }
+
+        if (r.HasStartFrame()) {
+          df["sf"] = r.StartFrame(Orientation::NATIVE, true, true);
         }
 
         df.attr("class") = "data.frame";

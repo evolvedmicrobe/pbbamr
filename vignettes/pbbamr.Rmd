@@ -186,8 +186,9 @@ ggplot(agg, aes(x=AfterDeletion, y=Deleted, fill=Count)) + geom_tile() +
   
 ## More Advanced Alignment Metrics
 
-pbbamr also enables you to see valuable metrics like SNR, pkMid and the pulse 
-width if they are available in the alignment file (as they are in internal mode BAMS).
+pbbamr also enables you to see valuable metrics like SNR, pkMid, the start frame
+and the pulse width if they are available in the alignment file (as they are in
+internal mode BAMS).
 
 ```{r, echo=TRUE, results='asis'}
 ifastaname = system.file("extdata", "All4Mer.V2.11.fna", package="pbbamr")

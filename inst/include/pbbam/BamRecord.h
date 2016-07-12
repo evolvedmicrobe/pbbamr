@@ -748,6 +748,22 @@ public:
     ///
     std::vector<uint32_t> StartFrame(Orientation orientation = Orientation::NATIVE) const;
 
+    /// \brief Fetches this record's StartFrame values ("sf" tag).
+    ///
+    /// \note If \p aligned is true, and gaps/padding need to be inserted, the
+    ///       new frames will have a value of 0.
+    ///
+    /// \param[in] orientation      Orientation of output.
+    /// \param[in] aligned          if true, gaps/padding will be inserted, per
+    ///                             Cigar info.
+    /// \param[in] exciseSoftClips  if true, any soft-clipped positions will be
+    ///                             removed from query ends
+    ///
+    /// \returns StartFrames as std::vector<uint32_t>
+    ///
+    std::vector<uint32_t>  StartFrame(Orientation orientation,
+                                 bool aligned,
+                                 bool exciseSoftClips) const;
     /// \}
 
 public:
@@ -1234,6 +1250,18 @@ private:
                                  const Orientation orientation,
                                  const bool aligned,
                                  const bool exciseSoftClips) const;
+
+    std::vector<uint32_t> FetchUIntsRaw(const std::string& tagName) const;
+
+    std::vector<uint32_t> FetchUInts(const std::string& tagName,
+                                                const Orientation orientation) const;
+
+    std::vector<uint32_t> FetchUInts(const std::string& tagName,
+                                                const Orientation orientation,
+                                                const bool aligned,
+                                                const bool exciseSoftClips) const;
+
+
 
     void ClipFields(const size_t clipPos, const size_t clipLength);
     BamRecord& ClipToQuery(const PacBio::BAM::Position start,

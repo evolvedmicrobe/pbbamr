@@ -1228,6 +1228,54 @@ QualityValues BamRecord::FetchQualities(const string& tagName,
     return quals;
 }
 
+std::vector<uint32_t> BamRecord::FetchUIntsRaw(const string& tagName) const
+{
+  // fetch tag data
+  const Tag& frameTag = impl_.TagValue(tagName);
+  if (frameTag.IsNull())
+    return std::vector<uint32_t>();
+  if(!frameTag.IsUInt32Array())
+    throw std::runtime_error("Tag data not expected uint16_t array, tag " + tagName);
+  return frameTag.ToUInt32Array();
+}
+
+std::vector<uint32_t> BamRecord::FetchUInts(const string& tagName,
+                                           const Orientation orientation) const
+{ return FetchUInts(tagName, orientation, false, false); }
+
+std::vector<uint32_t> BamRecord::FetchUInts(const string& tagName,
+                                           const Orientation orientation,
+                                           const bool aligned,
+                                           const bool exciseSoftClips) const
+{
+  // fetch raw
+  auto  arr = FetchUIntsRaw(tagName);
+  Orientation current = Orientation::NATIVE;
+
+  if (aligned || exciseSoftClips) {
+
+    // force into genomic orientation
+    internal::OrientTagDataAsRequested(&arr,
+                                       current,
+                                       Orientation::GENOMIC,
+                                       impl_.IsReverseStrand());
+    current = Orientation::GENOMIC;
+
+    // clip & gapify as requested
+    internal::ClipAndGapify<std::vector<uint32_t>*, uint32_t>(impl_,
+                                  aligned,
+                                  exciseSoftClips,
+                                  &arr, 0, 0);
+  }
+
+  // return in the orientation requested
+  internal::OrientTagDataAsRequested(&arr,
+                                     current,
+                                     orientation,
+                                     impl_.IsReverseStrand());
+  return arr;
+}
+
 string BamRecord::FullName(void) const
 { return impl_.Name(); }
 
@@ -1955,6 +2003,17 @@ std::vector<uint32_t> BamRecord::StartFrame(Orientation orientation) const
     const Tag& sfTag = impl_.TagValue(internal::tagName_startFrame);
     return sfTag.ToUInt32Array();
 }
+
+std::vector<uint32_t> BamRecord::StartFrame(Orientation orientation,
+                             bool aligned,
+                             bool exciseSoftClips) const
+{
+  return FetchUInts(internal::tagName_startFrame,
+                     orientation,
+                     aligned,
+                     exciseSoftClips);
+}
+
 
 BamRecord& BamRecord::StartFrame(const std::vector<uint32_t>& startFrame)
 {
