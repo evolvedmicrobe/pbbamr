@@ -21,6 +21,14 @@ test_that("dataMatches", {
   }
 })
 
+test_that("loadFromDataFrame", {
+  d = loadPBI(bfile)
+  aln = loadAlnsFromIndex(d, ffile)
+  expect_equal(length(aln), 10)
+  aln = loadAlnsFromIndex(d, ffile, 2:4)
+  expect_equal(length(aln), 3)
+})
+
 test_that("headerMatches", {
   d = loadHeader(bfile)
   expect_equal(as.numeric(as.character(d$sequences$length[1])), 48502)

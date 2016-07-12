@@ -94,3 +94,30 @@ getHoleX <- function(holeNumber)  {
 getHoleY = function(holeNumber) {
   holeNumber %% 65536
 }
+
+#' Given a data frame returned by loadPBI and a fasta file, load a list of alignments
+#'
+#' @param index A data frame returned by loadPBI
+#' @param indexed_fasta_name A character vector for the returned fasta file.
+#' @param rows A list of rows to select the data from (default = use all data)
+#' @return A list of alignments as data frames
+#' @export
+loadAlnsFromIndex <- function(index, indexed_fasta_name, rows = NULL ) {
+  chkClass(index, "data.frame", "Index is expected to be a data frame.")
+  chkClass(indexed_fasta_name, "character", "Filename needs to be a character pointing to a Fasta file.")
+
+  if(sum(colnames(index) %in% c("file", "offset")) != 2) {
+    stop("Index was expected to have a file and offset column.")
+  }
+
+  if (!is.null(rows)) {
+    index = index[rows,]
+  }
+
+  lapply(1:nrow(index), function(i) {
+    bam_name = as.character(index$file[i])
+    loadDataAtOffsets(index$offset[i], bamName = bam_name, indexedFastaName = indexed_fasta_name)[[1]]
+  })
+}
+
+

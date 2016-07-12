@@ -277,8 +277,12 @@ List loadHeader(std::string filename) {
   return df;
 }
 
-
-
+// Utility function for String.EndsWith
+bool has_suffix(const std::string &str, const std::string &suffix)
+{
+  return str.size() >= suffix.size() &&
+    str.compare(str.size() - suffix.size(), suffix.size(), suffix) == 0;
+}
 
 //' Load PBI BAM index file
 //'
@@ -306,7 +310,16 @@ DataFrame loadPBI(std::string filename,
    * dataframe directly, and then update the attributes to convert to a data frame
    */
   //"/Users/nigel/git/pbbam/tests/data/dataset/bam_mapping_1.bam.pbi"
-  PbiRawData raw(filename + ".pbi");
+  // std::string amendedName;
+  // if (has_suffix(filename, ".bam")) {
+  //   amendedName = filename;// + ".pbi";
+  // } else if (has_suffix(filename, ".xml")) {
+  //   amendedName = filename;
+  // } else {
+  //   Rcpp::stop("File must be either a BAM of Dataset (*.xml)");
+  // }
+  DataSet ds(filename);
+  PbiRawData raw(ds);
   auto basicData = raw.BasicData();
 
   /* Because R can't handle longs, the safest way we will deal with this
@@ -320,8 +333,20 @@ DataFrame loadPBI(std::string filename,
       offsets[i] = std::to_string(long_offsets[i]);
    }
 
+   // Load the file number
+   std::vector<uint16_t> fnraw = basicData.fileNumber_;
+   auto fileNumber = IntegerVector(fnraw.cbegin(), fnraw.cend(), [](const uint16_t& val) {
+     return static_cast<int>(val) + 1;
+   });
+   fileNumber.attr("class") = "factor";
+   auto fileNames = ds.BamFiles();
+   fileNumber.attr("levels") = CharacterVector(fileNames.begin(), fileNames.end(),
+                   [](const BamFile& bf){return bf.Filename();});
+
+
   // R data frames are basically lists
-  auto df =  List::create( Named("hole") = basicData.holeNumber_,
+  auto df =  List::create(  Named("file") = fileNumber,
+                            Named("hole") = basicData.holeNumber_,
                             Named("qstart") = basicData.qStart_,
                             Named("qend") = basicData.qEnd_,
                             Named("qual") = basicData.readQual_,
@@ -444,6 +469,7 @@ DataFrame loadPBI(std::string filename,
 //' @param indexedFastaName The name of the indexed fasta file this should come from.
 //'
 //' @return Returns a list of alignments as data frames.  If the IPD and Pulse Width are available, they will be columns in the returned data as well.
+//'
 //' @export
 // [[Rcpp::export]]
 List loadDataAtOffsets(CharacterVector offsets, std::string bamName, std::string indexedFastaName) {
@@ -532,7 +558,6 @@ List loadDataAtOffsets(CharacterVector offsets, std::string bamName, std::string
   }
   return List::create(Named("test") = 2);
 }
-
 
 
 //' Load BAM subreads as a list of data frames.
