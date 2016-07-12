@@ -31,6 +31,11 @@ test_that("loadFromDataFrame", {
   expect_equal(length(aln), 3)
 })
 
+test_that("snrLoads", {
+  d = loadPBI(bamdset, loadSNR = TRUE, loadRQ = TRUE)
+  expect_equal(abs(4.73512 - d$snrA[1]) < 1e-5, TRUE)
+})
+
 test_that("headerMatches", {
   d = loadHeader(bfile)
   expect_equal(as.numeric(as.character(d$sequences$length[1])), 48502)

@@ -343,10 +343,11 @@ DataFrame loadPBI(std::string filename,
    fileNumber.attr("levels") = CharacterVector(fileNames.begin(), fileNames.end(),
                    [](const BamFile& bf){return bf.Filename();});
 
-
+  // Used to validate later
+  auto holes = basicData.holeNumber_;
   // R data frames are basically lists
   auto df =  List::create(  Named("file") = fileNumber,
-                            Named("hole") = basicData.holeNumber_,
+                            Named("hole") = holes,
                             Named("qstart") = basicData.qStart_,
                             Named("qend") = basicData.qEnd_,
                             Named("qual") = basicData.readQual_,
@@ -397,6 +398,7 @@ DataFrame loadPBI(std::string filename,
 
   // Load metrics from within the BAM?
   if (loadSNR || loadNumPasses || loadRQ) {
+
     /* Derek said every file in the pbi should be in the index, and every item
     should be ordered in the BAM so I am going to parse directly. */
     NumericVector snrA, snrC, snrG, snrT, np, rq;
@@ -419,38 +421,46 @@ DataFrame loadPBI(std::string filename,
 
 
     int i=0;
-    BamReader br(filename);
-    BamRecord r;
-    while (br.GetNext(r) ) {
-      if (loadSNR)
-      {
-          if (r.HasSignalToNoise()) {
-            auto snrs = r.SignalToNoise();
-            snrA[i] = snrs[0]; snrC[i] = snrs[1];
-            snrG[i] = snrs[2]; snrT[i] = snrs[3];
-          } else{
-            auto na = NumericVector::get_na();
-            snrA[i] = na; snrC[i] = na;
-            snrG[i] = na; snrT[i] = na;
+    for(auto fn : fileNames) {
+      BamReader br(fn.Filename());
+      BamRecord r;
+      while (br.GetNext(r) ) {
+        // Verify data matches, just check hole for now.
+        // If these don't match, the index and order in the file may be different.
+        if(r.HoleNumber() != holes[i]) {
+          Rcpp::stop("Hole numbers did not match when parsing BAM to generate additional values for index.");
+        }
+
+        if (loadSNR)
+        {
+            if (r.HasSignalToNoise()) {
+              auto snrs = r.SignalToNoise();
+              snrA[i] = snrs[0]; snrC[i] = snrs[1];
+              snrG[i] = snrs[2]; snrT[i] = snrs[3];
+            } else{
+              auto na = NumericVector::get_na();
+              snrA[i] = na; snrC[i] = na;
+              snrG[i] = na; snrT[i] = na;
+            }
+        }
+
+        if (loadNumPasses) {
+          if(r.HasNumPasses()) {
+            np[i] = r.NumPasses();
+          } else {
+            np[i] = NumericVector::get_na();
           }
-      }
-
-      if (loadNumPasses) {
-        if(r.HasNumPasses()) {
-          np[i] = r.NumPasses();
-        } else {
-          np[i] = NumericVector::get_na();
         }
-      }
 
-      if (loadRQ) {
-        if (r.HasReadAccuracy()) {
-          rq[i] = r.ReadAccuracy();
-        } else {
-          rq[i] = NumericVector::get_na();
+        if (loadRQ) {
+          if (r.HasReadAccuracy()) {
+            rq[i] = r.ReadAccuracy();
+          } else {
+            rq[i] = NumericVector::get_na();
+          }
         }
+        i++;
       }
-      i++;
     }
   }
 
