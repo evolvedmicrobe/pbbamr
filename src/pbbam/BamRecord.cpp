@@ -208,52 +208,64 @@ T Clip(const T& input, const size_t pos, const size_t len)
               input.cbegin() + pos + len };
 }
 
+
+template <typename F, typename N>
+static void ClipAndGapify(const BamRecordImpl& impl,
+                          const bool aligned,
+                          const bool exciseSoftClips,
+                          F seq,
+                          N paddingNullValue,
+                          N deletionNullValue)
+{
+  assert(seq);
+  if (impl.IsMapped() && (aligned || exciseSoftClips)) {
+
+    size_t seqIndex = 0;
+    const auto cigar = impl.CigarData();
+    auto cigarIter = cigar.cbegin();
+    auto cigarEnd  = cigar.cend();
+    for (; cigarIter != cigarEnd; ++cigarIter) {
+      const auto op = (*cigarIter);
+      const auto type = op.Type();
+
+      // do nothing for hard clips
+      if (type != CigarOperationType::HARD_CLIP) {
+        const auto opLength = op.Length();
+
+        // maybe remove soft clips
+        if (type == CigarOperationType::SOFT_CLIP && exciseSoftClips)
+          seq->erase(seq->begin() + seqIndex, seq->begin() + seqIndex + opLength);
+
+        // for non-clipping operations
+        else {
+
+          // maybe add gaps/padding
+          if (aligned) {
+            if (type == CigarOperationType::DELETION) {
+              seq->reserve(seq->size() + opLength);
+              seq->insert(seq->begin() + seqIndex, opLength, deletionNullValue);
+            }
+            else if (type == CigarOperationType::PADDING) {
+              seq->reserve(seq->size() + opLength);
+              seq->insert(seq->begin() + seqIndex, opLength, paddingNullValue);
+            }
+          }
+
+          // update index
+          seqIndex += opLength;
+        }
+      }
+    }
+  }
+}
+
 static
 void ClipAndGapifyBases(const BamRecordImpl& impl,
                         const bool aligned,
                         const bool exciseSoftClips,
                         string* seq)
 {
-    assert(seq);
-    if (impl.IsMapped() && (aligned || exciseSoftClips)) {
-
-        size_t seqIndex = 0;
-        const auto cigar = impl.CigarData();
-        auto cigarIter = cigar.cbegin();
-        auto cigarEnd  = cigar.cend();
-        for (; cigarIter != cigarEnd; ++cigarIter) {
-            const auto op = (*cigarIter);
-            const auto type = op.Type();
-
-            // do nothing for hard clips
-            if (type != CigarOperationType::HARD_CLIP) {
-                const auto opLength = op.Length();
-
-                // maybe remove soft clips
-                if (type == CigarOperationType::SOFT_CLIP && exciseSoftClips)
-                    seq->erase(seqIndex, opLength);
-
-                // for non-clipping operations
-                else {
-
-                    // maybe add gaps/padding
-                    if (aligned) {
-                        if (type == CigarOperationType::DELETION) {
-                            seq->reserve(seq->size() + opLength);
-                            seq->insert(seqIndex, opLength, '-');
-                        }
-                        else if (type == CigarOperationType::PADDING) {
-                            seq->reserve(seq->size() + opLength);
-                            seq->insert(seqIndex, opLength, '*');
-                        }
-                    }
-
-                    // update index
-                    seqIndex += opLength;
-                }
-            }
-        }
-    }
+    ClipAndGapify<string*, char>(impl, aligned, exciseSoftClips, seq, '*', '-');
 }
 
 static
@@ -262,49 +274,9 @@ void ClipAndGapifyFrames(const BamRecordImpl& impl,
                          const bool exciseSoftClips,
                          Frames* frames)
 {
-    assert(frames);
-
-    if (impl.IsMapped() && (aligned || exciseSoftClips)) {
-
-        auto data = std::move(frames->Data()); // we're going to put it back
-        size_t frameIndex = 0;
-        const auto cigar = impl.CigarData();
-        auto cigarIter = cigar.cbegin();
-        auto cigarEnd  = cigar.cend();
-        for (; cigarIter != cigarEnd; ++cigarIter) {
-            const auto op = (*cigarIter);
-            const auto type = op.Type();
-
-            // do nothing for hard clips
-            if (type != CigarOperationType::HARD_CLIP) {
-                const auto opLength = op.Length();
-
-                // maybe remove soft clips
-                if (type == CigarOperationType::SOFT_CLIP && exciseSoftClips) {
-                    data.erase(data.begin() + frameIndex,
-                               data.begin() + frameIndex + opLength);
-                }
-
-                // for non-clipping operations
-                else {
-
-                    // maybe add gaps/padding
-                    if (aligned) {
-                        if (type == CigarOperationType::DELETION ||
-                            type == CigarOperationType::PADDING)
-                        {
-                            data.reserve(data.size() + opLength);
-                            data.insert(data.begin() + frameIndex, opLength, 0);
-                        }
-                    }
-
-                    // update index
-                    frameIndex += opLength;
-                }
-            }
-        }
-        frames->Data(data);
-    }
+  std::vector<uint16_t> data = std::move(frames->Data());
+  ClipAndGapify<std::vector<uint16_t>*, uint16_t>(impl, aligned, exciseSoftClips, &data, 0, 0);
+  frames->Data(data);
 }
 
 
@@ -314,43 +286,8 @@ void ClipAndGapifyQualities(const BamRecordImpl& impl,
                             const bool exciseSoftClips,
                             QualityValues* quals)
 {
-    assert(quals);
-
-    if (impl.IsMapped() && (aligned || exciseSoftClips)) {
-
-        size_t qualIndex = 0;
-        const auto cigar = impl.CigarData();
-        auto cigarIter = cigar.cbegin();
-        auto cigarEnd  = cigar.cend();
-        for (; cigarIter != cigarEnd; ++cigarIter) {
-            const auto op = (*cigarIter);
-            const auto type = op.Type();
-
-            // do nothing for hard clips
-            if (type != CigarOperationType::HARD_CLIP) {
-                const auto opLength = op.Length();
-
-                // maybe remove soft clips
-                if (type == CigarOperationType::SOFT_CLIP && exciseSoftClips)
-                    quals->erase(quals->begin() + qualIndex, quals->begin() + qualIndex + opLength);
-
-                // for non-clipping operations
-                else {
-
-                    // maybe add gaps/padding
-                    if (aligned) {
-                        if (type == CigarOperationType::DELETION || type == CigarOperationType::PADDING) {
-                            quals->reserve(quals->size() + opLength);
-                            quals->insert(quals->begin() + qualIndex, opLength, QualityValue(0));
-                        }
-                    }
-
-                    // update index
-                    qualIndex += opLength;
-                }
-            }
-        }
-    }
+   ClipAndGapify<QualityValues*, QualityValue>(impl, aligned, exciseSoftClips,
+                                               quals, QualityValue(0), QualityValue(0));
 }
 
 static
@@ -573,7 +510,7 @@ void BamRecord::CalculateAlignedPositions(void) const
     const RecordType type  = Type();
     const Position qStart  = (type == RecordType::CCS) ? Position(0) : QueryStart();
     const Position qEnd    = (type == RecordType::CCS) ? Position(seqLength) : QueryEnd();
-    
+
     if (qStart == PacBio::BAM::UnmappedPosition || qEnd == PacBio::BAM::UnmappedPosition)
         return;
 
@@ -1504,7 +1441,7 @@ pair<size_t, size_t> BamRecord::NumMatchesAndMismatches(void) const
 size_t BamRecord::NumMismatches(void) const
 { return NumMatchesAndMismatches().second; }
 
-Frames BamRecord::PreBaseFrames(Orientation orientation, 
+Frames BamRecord::PreBaseFrames(Orientation orientation,
                                 bool aligned,
                                 bool exciseSoftClips) const
 { return IPD(orientation, aligned, exciseSoftClips); }
