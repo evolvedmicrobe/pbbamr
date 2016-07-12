@@ -30,9 +30,8 @@ simply run the following command before those given above:
 
 ## Loading and plotting pbi files
 
-Simply pass a BAM file name to the `loadPBI` function (the pbi file must exist
-as the filename + ".pbi") which will return a data frame with the information
-available in the pbi file.
+Simply pass a BAM (.bam) or Dataset (.xml) file name to the `loadPBI` function
+which will return a data frame with the information available in the pbi file.
 
 ```{r, echo=TRUE, results='asis'}
 library(pbbamr)
@@ -42,7 +41,7 @@ bamname = system.file("extdata", "bam_mapping_1.bam", package="pbbamr")
 # Load the index table.
 ind = loadPBI(bamname)
 # Show the first 3 rows (transposed, note kable just formats)
-knitr::kable(t(ind[1:3,]))
+knitr::kable(t(ind[1,]))
 ```
 
 The fields in the data frame closely correspond to the [published documentation
@@ -110,7 +109,7 @@ just reading the index, it is not loaded by default.
 
 Given an index file, we may want to drill down and examine the individul
 alignments.  `pbbamr` allows you to do this if you have an indexed fasta file of
-the reference available.  The function `loadDataAtOffsets` will take a list of
+the reference available.  The function `loadAlnsFromIndex` will take a list of
 file offsets (from the pbi index file) and return each BAM record specified by a
 file offset as a data frame with rows corresponding to alignment positions and
 columns as read or reference bases.
@@ -119,7 +118,7 @@ columns as read or reference bases.
 # Get the name of the sample indexed FASTA file
 fastaname = system.file("extdata", "lambdaNEB.fa", package="pbbamr")
 # let's just grab and plot one alignment.
-allAlns = loadDataAtOffsets(ind$offset[1], bamname, fastaname)
+allAlns = loadAlnsFromIndex(ind, fastaname, 1)
 # The alignments are returned as a list of data frames
 # in this case let's just look at the first
 aln = allAlns[[1]]
@@ -134,11 +133,11 @@ alignments matches the pbi file.
 
 ```{r, echo=TRUE, collapse=TRUE, results='hold'}
 # Get all the alignments for all records in the index
-allAlns = loadDataAtOffsets(ind$offset, bamname, fastaname)
+allAlns = loadAlnsFromIndex(ind, fastaname)
 # let's combine the individual alignments into one big data frame
 alns = do.call(rbind, allAlns)
 # Now count the number of insertions
-insert_cnt = sum(alns$ref=="-")
+insert_cnt = sum(alns$ref == "-")
 # Do they match the pbi file?
 insert_cnt == sum(ind$inserts)
 ```
@@ -195,7 +194,7 @@ ifastaname = system.file("extdata", "All4Mer.V2.11.fna", package="pbbamr")
 ibamname = system.file("extdata", "internalsample.bam", package="pbbamr")
 # Load the index table.
 iind = loadPBI(ibamname)
-allAlns = loadDataAtOffsets(iind$offset, ibamname, ifastaname)
+allAlns = loadAlnsFromIndex(iind, ifastaname)
 # let's combine the individual alignments into one big data frame
 alns = do.call(rbind, allAlns)
 knitr::kable(head(alns[1:6,]))
@@ -209,7 +208,7 @@ the loadHeader function.
 ```{r, echo=TRUE, results='asis'}
 header = loadHeader(ibamname)
 # Print out some of the items available in the list
-knitr::kable(header$version)
+header$version
 knitr::kable(header$readgroups)
 knitr::kable(header$sequences)
 knitr::kable(header$programs)
