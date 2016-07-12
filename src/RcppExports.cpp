@@ -16,14 +16,14 @@ BEGIN_RCPP
     return __result;
 END_RCPP
 }
-// getBAMNameFromDatasetFile
-std::string getBAMNameFromDatasetFile(std::string dataset_name);
-RcppExport SEXP pbbamr_getBAMNameFromDatasetFile(SEXP dataset_nameSEXP) {
+// getBAMNamesFromDatasetFile
+CharacterVector getBAMNamesFromDatasetFile(std::string dataset_name);
+RcppExport SEXP pbbamr_getBAMNamesFromDatasetFile(SEXP dataset_nameSEXP) {
 BEGIN_RCPP
     Rcpp::RObject __result;
     Rcpp::RNGScope __rngScope;
     Rcpp::traits::input_parameter< std::string >::type dataset_name(dataset_nameSEXP);
-    __result = Rcpp::wrap(getBAMNameFromDatasetFile(dataset_name));
+    __result = Rcpp::wrap(getBAMNamesFromDatasetFile(dataset_name));
     return __result;
 END_RCPP
 }

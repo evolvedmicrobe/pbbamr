@@ -21,8 +21,8 @@ getFastaFileNameFromDatasetFile <- function(dataset_name) {
 #' @param filename The BAM file name
 #' @export
 #' @examples getBAMNameFromDatasetFile("alignmentset.xml")
-getBAMNameFromDatasetFile <- function(dataset_name) {
-    .Call('pbbamr_getBAMNameFromDatasetFile', PACKAGE = 'pbbamr', dataset_name)
+getBAMNamesFromDatasetFile <- function(dataset_name) {
+    .Call('pbbamr_getBAMNamesFromDatasetFile', PACKAGE = 'pbbamr', dataset_name)
 }
 
 #' Load BAM header
@@ -64,6 +64,7 @@ loadPBI <- function(filename, loadSNR = FALSE, loadNumPasses = FALSE, loadRQ = F
 #' @param indexedFastaName The name of the indexed fasta file this should come from.
 #'
 #' @return Returns a list of alignments as data frames.  If the IPD and Pulse Width are available, they will be columns in the returned data as well.
+#'
 #' @export
 loadDataAtOffsets <- function(offsets, bamName, indexedFastaName) {
     .Call('pbbamr_loadDataAtOffsets', PACKAGE = 'pbbamr', offsets, bamName, indexedFastaName)

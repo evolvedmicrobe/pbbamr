@@ -39,7 +39,11 @@ std::string getFastaFileNameFromDatasetFile(std::string dataset_name) {
 //' @export
 //' @examples getBAMNameFromDatasetFile("alignmentset.xml")
 // [[Rcpp::export]]
-std::string getBAMNameFromDatasetFile(std::string dataset_name) {
-  return getFileNameFromDataset(dataset_name);
+CharacterVector getBAMNamesFromDatasetFile(std::string dataset_name) {
+  DataSet ds(dataset_name);
+  auto fileNames = ds.BamFiles();
+  return CharacterVector(fileNames.begin(), fileNames.end(),
+                  [](const BamFile& bf){return bf.Filename();});
+
 }
 

@@ -2,13 +2,15 @@ library(pbbamr)
 #bfile = "/Users/nigel/git/pbbamr/tests/testthat//test.aligned.bam"
 #ffile = "/Users/nigel/git/pbbamr/tests/testthat/lambdaNEB.fa"
 #ofile = "/Users/nigel/git/pbbamr/tests/testthat/loadedAln.Rd"
-
+#sbamdset = "/Users/nigel/git/pbbamr/tests/testthat/SubreadSet/m54006_160504_020705.tiny.subreadset.xml"
+#setwd("/Users/nigel/git/pbbamr/tests/testthat/")
 bfile = "test.aligned.bam"
 ffile = "lambdaNEB.fa"
 ofile = "loadedAln.Rd"
 refdset = "referenceset.xml"
-bamdset = "alignmentset.xml"
-sbamdset = "subreadset.xml"
+bamdset = "AlignmentSet/m54006_160504_020705.alignmentset.xml"
+sbamdset = "SubreadSet/m54006_160504_020705.tiny.subreadset.xml"
+
 test_that("dataMatches", {
   d = loadPBI(bfile)
   head(d)
@@ -41,11 +43,13 @@ test_that("fastafound", {
 })
 
 test_that("alignedBAMfound", {
-  bam = getBAMNameFromDatasetFile(bamdset)
-  expect_equal("/home/nechols/src/PacBioSampleData/data/AlignmentSet/m140905_042212_sidney_c100564852550000001823085912221377_s1_X0.aligned_subreads.bam", bam)
+  bam = getBAMNamesFromDatasetFile(bamdset)
+  expected = c("AlignmentSet/m54006_160504_020705.tiny_mapped.1.subreads.bam",
+               "AlignmentSet/m54006_160504_020705.tiny_mapped.2.subreads.bam")
+  expect_equal(expected, bam)
 })
 
 test_that("subreadsBAMfound", {
-  bam = getBAMNameFromDatasetFile(sbamdset)
-  expect_equal("/home/nechols/src/PacBioSampleData/data/SubreadSet/m140905_042212_sidney_c100564852550000001823085912221377_s1_X0.subreads.bam", bam)
+  bam = getBAMNamesFromDatasetFile("SubreadSet/m54006_160504_020705.tiny.subreadset.xml")
+  expect_equal("SubreadSet/m54006_160504_020705.tiny.subreads.bam", bam[1])
 })
