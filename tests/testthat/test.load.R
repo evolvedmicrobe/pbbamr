@@ -54,6 +54,13 @@ test_that("SC Loads", {
 })
 
 
+test_that("Start Frame Loads", {
+  ibam = "SubreadSet/m54006_160504_020705.tiny.scraps.bam"
+  ind = loadPBI(ibam, loadSC = TRUE)
+  expect_equal(ind$sc[1], factor("LQRegion", levels = levels(ind$sc)))
+})
+
+
 test_that("alignedBAMfound", {
   bam = getBAMNamesFromDatasetFile(bamdset)
   expected = c("AlignmentSet/m54006_160504_020705.tiny_mapped.1.subreads.bam",
