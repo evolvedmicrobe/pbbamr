@@ -1,0 +1,147 @@
+---
+title: "Updates to pbbamr package"
+author: "Nigel Delaney"
+date: "July 12, 2016"
+output: 
+  html_document:
+    toc: true
+    tod_depth: 2
+    theme: journal
+---
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_knit$set(root.dir = "/Users/nigel/git/pbbamr/tests/testthat")
+```
+
+
+This document describes recent changes and enhancements to the pbbamr package.
+
+# New abilities to read and query DataSets 
+
+`pbbamr` traditionally worked on single BAM files, which was mismatched with
+SMRTLink which uses Dataset files that represented a collection of BAM files
+specified in XML.  The library now has new abilities to make working with these
+datasets much easier.
+
+### A 'Meta' PBI index for DataSets
+
+`loadPBI` now can return a "meta" index of a collection of BAMs by passing in a 
+dataset file name (though it still accepts BAM file names).  The function now also
+returns a "file" column in the data frame that says which BAM file an entry
+refers to, as the example below shows.
+
+```{r }
+library(pbbamr)
+index = loadPBI("AlignmentSet/m54006_160504_020705.alignmentset.xml")
+index[1:3,]
+```
+
+
+
+### A new interface to obtain alignments
+
+Previously when loading alignments, one would use the `loadDataAtOffsets` 
+function which would take a file offset, a BAM file name and a fasta file name. 
+This function is now deprecated in favor of one that can take advantage of the
+fact that the indexes returned by `loadPBI` contain the BAM file name so we
+don't need to keep passing that around.  The new function takes a data frame
+returned by `loadPBI`, a fasta name containing the reference, and optionally a
+subset of rows to obtain alignments from.  Its signature is
+`loadAlnsFromIndex(index, indexed_fasta_name, rows)`
+
+
+```{r }
+bfile = "test.aligned.bam"
+ffile = "lambdaNEB.fa"
+index = loadPBI(bfile)
+alns = loadAlnsFromIndex(index, ffile)
+head(alns[[1]])
+```
+
+
+### Convenience functions to examine Dataset XML files
+
+Introduced one function to get the names of all BAMs in a dataset and
+another to obtain the file name of the fasta file from a reference dataset.
+
+```{r}
+# View BAM files
+getBAMNamesFromDatasetFile("AlignmentSet/m54006_160504_020705.alignmentset.xml")
+```
+
+```{r}
+# Get Reference Fasta Name
+getFastaFileNameFromDatasetFile("ReferenceSet/lambdaNEB/referenceset.xml")
+```
+
+
+# Obtain "SC" data from scraps.bam files
+
+`loadPBI` now has a `loadSC` flag which allows the user to also load the type of
+scrap for an entry if and only if the BAM file is a *.scraps.bam file.
+
+```{r }
+index = loadPBI("SubreadSet/m54006_160504_020705.tiny.scraps.bam", loadSC = TRUE)
+summary(index$sc)
+```
+
+# Obtain Start frame and Pkmid information with alignments
+
+Internal BAMs have information that is not typically available in production
+BAMs. pbbamr now has the ability to load more of this information, including the
+Start Frame and the Pkmid values.
+
+```{r}
+# Get names of data files distributed with pbbamr to use as examples
+ifastaname = system.file("extdata", "All4Mer.V2.11.fna", package="pbbamr")
+ibamname = system.file("extdata", "internalsample.bam", package="pbbamr")
+# Load the index table.
+iind = loadPBI(ibamname)
+allAlns = loadAlnsFromIndex(iind, ifastaname)
+head(allAlns[[1]])
+```
+
+# Common data manipulation and transformation functions
+
+### Combine datasets while adding a named factor variable
+
+Often times we have a collection of datasets we want to combine, while also 
+adding a factor variable so we can for example plot the data together or easily 
+calculate summary statistics for each of the original groupings.  We added a new
+function to enable this.  It's equivalent to the `collapse` function in pbutils,
+but should be orders of magnitude faster.
+
+```{r }
+# Make some fake data to combine
+df1 = data.frame(a=1:2, b=3:4)
+df2 = data.frame(a=5:6, b=7:8)
+dfs = list(First = df1, Second = df2)
+# Now use the new function taking the factor names from the list
+combineConditions(dfs)
+# Or do it the second way, specifying a name
+combineConditions(dfs, c("I want a crazy name", "No, I want a crazy name"))
+```
+
+### Calculate chip X, Y positions from the hole number
+
+Added very simple functions which can be used as shown below.
+
+```{r}
+hole = 500*(2^16) + 55
+getHoleX(hole)
+getHoleY(hole)
+```
+
+### Phred conversion functions
+
+See `?fromPhred` and `?toPhred` for details.
+
+# Bug Fixes
+
+* The pkmid may have been returned incorrectly on some alignments, this is now fixed.
+
+
+

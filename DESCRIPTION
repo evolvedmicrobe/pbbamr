@@ -1,7 +1,7 @@
 Package: pbbamr
 Type: Package
 Title: Interface R with PacBio BAM File Formats
-Version: 0.2.0
+Version: 0.3.0
 Date: 2015-12-09
 Author: Nigel Delaney
 Maintainer: Nigel Delaney <google.can.find.me@somewhere.net>
