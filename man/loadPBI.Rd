@@ -4,7 +4,8 @@
 \alias{loadPBI}
 \title{Load PBI BAM index file}
 \usage{
-loadPBI(filename, loadSNR = FALSE, loadNumPasses = FALSE, loadRQ = FALSE)
+loadPBI(filename, loadSNR = FALSE, loadNumPasses = FALSE, loadRQ = FALSE,
+  loadSC = FALSE)
 }
 \arguments{
 \item{filename}{The BAM file name (without .pbi)}
@@ -14,6 +15,8 @@ loadPBI(filename, loadSNR = FALSE, loadNumPasses = FALSE, loadRQ = FALSE)
 \item{loadNumPasses}{Should we load the number of passes data? (Default = FALSE)}
 
 \item{loadRQ}{Should we load the read quality? (Default = FALSE)}
+
+\item{loadSC}{Load the SC tag for a scraps.bam file? (Only possible if file ends with '.scraps.bam')}
 }
 \description{
 This function loads a pbi index file into a dataframe.  Depending on the

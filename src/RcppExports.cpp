@@ -39,8 +39,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // loadPBI
-DataFrame loadPBI(std::string filename, bool loadSNR, bool loadNumPasses, bool loadRQ);
-RcppExport SEXP pbbamr_loadPBI(SEXP filenameSEXP, SEXP loadSNRSEXP, SEXP loadNumPassesSEXP, SEXP loadRQSEXP) {
+DataFrame loadPBI(std::string filename, bool loadSNR, bool loadNumPasses, bool loadRQ, bool loadSC);
+RcppExport SEXP pbbamr_loadPBI(SEXP filenameSEXP, SEXP loadSNRSEXP, SEXP loadNumPassesSEXP, SEXP loadRQSEXP, SEXP loadSCSEXP) {
 BEGIN_RCPP
     Rcpp::RObject __result;
     Rcpp::RNGScope __rngScope;
@@ -48,7 +48,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< bool >::type loadSNR(loadSNRSEXP);
     Rcpp::traits::input_parameter< bool >::type loadNumPasses(loadNumPassesSEXP);
     Rcpp::traits::input_parameter< bool >::type loadRQ(loadRQSEXP);
-    __result = Rcpp::wrap(loadPBI(filename, loadSNR, loadNumPasses, loadRQ));
+    Rcpp::traits::input_parameter< bool >::type loadSC(loadSCSEXP);
+    __result = Rcpp::wrap(loadPBI(filename, loadSNR, loadNumPasses, loadRQ, loadSC));
     return __result;
 END_RCPP
 }

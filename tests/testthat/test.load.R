@@ -47,6 +47,12 @@ test_that("fastafound", {
   expect_equal("./sequence/lambdaNEB.fasta", fasta)
 })
 
+test_that("SC Loads", {
+  fasta = getFastaFileNameFromDatasetFile(refdset)
+  expect_equal("./sequence/lambdaNEB.fasta", fasta)
+})
+
+
 test_that("alignedBAMfound", {
   bam = getBAMNamesFromDatasetFile(bamdset)
   expected = c("AlignmentSet/m54006_160504_020705.tiny_mapped.1.subreads.bam",

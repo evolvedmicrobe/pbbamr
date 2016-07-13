@@ -93,11 +93,14 @@ other pieces of information can be collected:
 | SNR-C |
 | SNR-G |
 | SNR-T |
+| Scrap Annotation (Only available for scraps.bam files)|
 
 And you can do this with simple flags:
 
 ```
 ind <- loadPBI(bamname, loadSNR=TRUE, loadNumPasses = TRUE, loadRQ = TRUE)
+# Note loading scraps files can only be done if the name ends with ".scraps.bam" as below
+# ind <- loadPBI("myfile.scraps.bam", loadSC = TRUE)
 ```
 
 If the data file does not have the requested fields, NA values will be provided 

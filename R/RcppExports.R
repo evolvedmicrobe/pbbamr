@@ -51,10 +51,11 @@ loadHeader <- function(filename) {
 #' @param loadSNR Should we load the four channel SNR data? (Default = FALSE)
 #' @param loadNumPasses Should we load the number of passes data? (Default = FALSE)
 #' @param loadRQ Should we load the read quality? (Default = FALSE)
+#' @param loadSC Load the SC tag for a scraps.bam file? (Only possible if file ends with '.scraps.bam')
 #' @export
 #' @examples loadPBI("~git/pbbam/tests/data/dataset/bam_mapping_1.bam")
-loadPBI <- function(filename, loadSNR = FALSE, loadNumPasses = FALSE, loadRQ = FALSE) {
-    .Call('pbbamr_loadPBI', PACKAGE = 'pbbamr', filename, loadSNR, loadNumPasses, loadRQ)
+loadPBI <- function(filename, loadSNR = FALSE, loadNumPasses = FALSE, loadRQ = FALSE, loadSC = FALSE) {
+    .Call('pbbamr_loadPBI', PACKAGE = 'pbbamr', filename, loadSNR, loadNumPasses, loadRQ, loadSC)
 }
 
 #' Load BAM alignments as a list of data frames.

@@ -94,141 +94,97 @@ bamname =<span class="st"> </span><span class="kw">system.file</span>(<span clas
 <span class="co"># Load the index table.</span>
 ind =<span class="st"> </span><span class="kw">loadPBI</span>(bamname)
 <span class="co"># Show the first 3 rows (transposed, note kable just formats)</span>
-knitr::<span class="kw">kable</span>(<span class="kw">t</span>(ind[<span class="dv">1</span>:<span class="dv">3</span>,]))</code></pre></div>
+knitr::<span class="kw">kable</span>(<span class="kw">t</span>(ind[<span class="dv">1</span>,]))</code></pre></div>
 <table>
 <thead>
 <tr class="header">
 <th align="left"></th>
 <th align="left">1</th>
-<th align="left">2</th>
-<th align="left">3</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
 <td align="left">file</td>
 <td align="left">/Users/nigel/git/pbbamr/inst/extdata/bam_mapping_1.bam</td>
-<td align="left">/Users/nigel/git/pbbamr/inst/extdata/bam_mapping_1.bam</td>
-<td align="left">/Users/nigel/git/pbbamr/inst/extdata/bam_mapping_1.bam</td>
 </tr>
 <tr class="even">
 <td align="left">hole</td>
 <td align="left">49050</td>
-<td align="left">32328</td>
-<td align="left">6469</td>
 </tr>
 <tr class="odd">
 <td align="left">qstart</td>
 <td align="left">48</td>
-<td align="left">0</td>
-<td align="left">9936</td>
 </tr>
 <tr class="even">
 <td align="left">qend</td>
 <td align="left">1132</td>
-<td align="left">344</td>
-<td align="left">10187</td>
 </tr>
 <tr class="odd">
 <td align="left">qual</td>
-<td align="left">0</td>
-<td align="left">0</td>
 <td align="left">0</td>
 </tr>
 <tr class="even">
 <td align="left">offset</td>
 <td align="left">32636928</td>
-<td align="left">32645486</td>
-<td align="left">32648388</td>
 </tr>
 <tr class="odd">
 <td align="left">flag</td>
-<td align="left">0</td>
-<td align="left">0</td>
 <td align="left">0</td>
 </tr>
 <tr class="even">
 <td align="left">ref</td>
 <td align="left">lambda_NEB3011</td>
-<td align="left">lambda_NEB3011</td>
-<td align="left">lambda_NEB3011</td>
 </tr>
 <tr class="odd">
 <td align="left">tstart</td>
 <td align="left">0</td>
-<td align="left">675</td>
-<td align="left">2170</td>
 </tr>
 <tr class="even">
 <td align="left">tend</td>
 <td align="left">471</td>
-<td align="left">1026</td>
-<td align="left">2397</td>
 </tr>
 <tr class="odd">
 <td align="left">astart</td>
 <td align="left">653</td>
-<td align="left">1</td>
-<td align="left">9960</td>
 </tr>
 <tr class="even">
 <td align="left">aend</td>
 <td align="left">1129</td>
-<td align="left">344</td>
-<td align="left">10185</td>
 </tr>
 <tr class="odd">
 <td align="left">rc</td>
 <td align="left">FALSE</td>
-<td align="left">FALSE</td>
-<td align="left">TRUE</td>
 </tr>
 <tr class="even">
 <td align="left">matches</td>
 <td align="left">460</td>
-<td align="left">339</td>
-<td align="left">216</td>
 </tr>
 <tr class="odd">
 <td align="left">mismatches</td>
-<td align="left">0</td>
-<td align="left">0</td>
 <td align="left">0</td>
 </tr>
 <tr class="even">
 <td align="left">mq</td>
 <td align="left">254</td>
-<td align="left">254</td>
-<td align="left">254</td>
 </tr>
 <tr class="odd">
 <td align="left">inserts</td>
 <td align="left">16</td>
-<td align="left">4</td>
-<td align="left">9</td>
 </tr>
 <tr class="even">
 <td align="left">dels</td>
-<td align="left">11</td>
-<td align="left">12</td>
 <td align="left">11</td>
 </tr>
 <tr class="odd">
 <td align="left">bcf</td>
 <td align="left">-1</td>
-<td align="left">-1</td>
-<td align="left">-1</td>
 </tr>
 <tr class="even">
 <td align="left">bcr</td>
 <td align="left">-1</td>
-<td align="left">-1</td>
-<td align="left">-1</td>
 </tr>
 <tr class="odd">
 <td align="left">bcqual</td>
-<td align="left">-1</td>
-<td align="left">-1</td>
 <td align="left">-1</td>
 </tr>
 </tbody>
@@ -286,11 +242,11 @@ ind$alnLength =<span class="st"> </span>ind$tend -<span class="st"> </span>ind$t
 </div>
 <div id="examining-individual-alignments" class="section level2">
 <h2>Examining Individual Alignments</h2>
-<p>Given an index file, we may want to drill down and examine the individul alignments. <code>pbbamr</code> allows you to do this if you have an indexed fasta file of the reference available. The function <code>loadDataAtOffsets</code> will take a list of file offsets (from the pbi index file) and return each BAM record specified by a file offset as a data frame with rows corresponding to alignment positions and columns as read or reference bases.</p>
+<p>Given an index file, we may want to drill down and examine the individul alignments. <code>pbbamr</code> allows you to do this if you have an indexed fasta file of the reference available. The function <code>loadAlnsFromIndex</code> will take a list of file offsets (from the pbi index file) and return each BAM record specified by a file offset as a data frame with rows corresponding to alignment positions and columns as read or reference bases.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Get the name of the sample indexed FASTA file</span>
 fastaname =<span class="st"> </span><span class="kw">system.file</span>(<span class="st">&quot;extdata&quot;</span>, <span class="st">&quot;lambdaNEB.fa&quot;</span>, <span class="dt">package=</span><span class="st">&quot;pbbamr&quot;</span>)
 <span class="co"># let's just grab and plot one alignment.</span>
-allAlns =<span class="st"> </span><span class="kw">loadDataAtOffsets</span>(ind$offset[<span class="dv">1</span>], bamname, fastaname)
+allAlns =<span class="st"> </span><span class="kw">loadAlnsFromIndex</span>(ind, fastaname, <span class="dv">1</span>)
 <span class="co"># The alignments are returned as a list of data frames</span>
 <span class="co"># in this case let's just look at the first</span>
 aln =<span class="st"> </span>allAlns[[<span class="dv">1</span>]]
@@ -304,11 +260,11 @@ aln =<span class="st"> </span>allAlns[[<span class="dv">1</span>]]
 ## 6    G   G</code></pre>
 <p>Each alignment (or BAM record) is returned as a data frame element of a list. With this, one could combine all of these into one super alignment to gain statistics. For example, let’s validate that the number of insertions in the alignments matches the pbi file.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Get all the alignments for all records in the index</span>
-allAlns =<span class="st"> </span><span class="kw">loadDataAtOffsets</span>(ind$offset, bamname, fastaname)
+allAlns =<span class="st"> </span><span class="kw">loadAlnsFromIndex</span>(ind, fastaname)
 <span class="co"># let's combine the individual alignments into one big data frame</span>
 alns =<span class="st"> </span><span class="kw">do.call</span>(rbind, allAlns)
 <span class="co"># Now count the number of insertions</span>
-insert_cnt =<span class="st"> </span><span class="kw">sum</span>(alns$ref==<span class="st">&quot;-&quot;</span>)
+insert_cnt =<span class="st"> </span><span class="kw">sum</span>(alns$ref ==<span class="st"> &quot;-&quot;</span>)
 <span class="co"># Do they match the pbi file?</span>
 insert_cnt ==<span class="st"> </span><span class="kw">sum</span>(ind$inserts)
 ## [1] TRUE</code></pre></div>
@@ -422,7 +378,7 @@ agg =<span class="st"> </span><span class="kw">aggregate</span>(Count ~<span cla
 ibamname =<span class="st"> </span><span class="kw">system.file</span>(<span class="st">&quot;extdata&quot;</span>, <span class="st">&quot;internalsample.bam&quot;</span>, <span class="dt">package=</span><span class="st">&quot;pbbamr&quot;</span>)
 <span class="co"># Load the index table.</span>
 iind =<span class="st"> </span><span class="kw">loadPBI</span>(ibamname)
-allAlns =<span class="st"> </span><span class="kw">loadDataAtOffsets</span>(iind$offset, ibamname, ifastaname)
+allAlns =<span class="st"> </span><span class="kw">loadAlnsFromIndex</span>(iind, ifastaname)
 <span class="co"># let's combine the individual alignments into one big data frame</span>
 alns =<span class="st"> </span><span class="kw">do.call</span>(rbind, allAlns)
 knitr::<span class="kw">kable</span>(<span class="kw">head</span>(alns[<span class="dv">1</span>:<span class="dv">6</span>,]))</code></pre></div>
@@ -524,14 +480,8 @@ knitr::<span class="kw">kable</span>(<span class="kw">head</span>(alns[<span cla
 <p>You can obtain most of the information available in the header simply by calling the loadHeader function.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">header =<span class="st"> </span><span class="kw">loadHeader</span>(ibamname)
 <span class="co"># Print out some of the items available in the list</span>
-knitr::<span class="kw">kable</span>(header$version)</code></pre></div>
-<table>
-<tbody>
-<tr class="odd">
-<td align="left">1.5</td>
-</tr>
-</tbody>
-</table>
+header$version</code></pre></div>
+<p>[1] “1.5”</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">knitr::<span class="kw">kable</span>(header$readgroups)</code></pre></div>
 <table>
 <thead>

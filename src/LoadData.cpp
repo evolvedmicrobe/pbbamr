@@ -297,27 +297,26 @@ bool has_suffix(const std::string &str, const std::string &suffix)
 //' @param loadSNR Should we load the four channel SNR data? (Default = FALSE)
 //' @param loadNumPasses Should we load the number of passes data? (Default = FALSE)
 //' @param loadRQ Should we load the read quality? (Default = FALSE)
+//' @param loadSC Load the SC tag for a scraps.bam file? (Only possible if file ends with '.scraps.bam')
 //' @export
 //' @examples loadPBI("~git/pbbam/tests/data/dataset/bam_mapping_1.bam")
 // [[Rcpp::export]]
 DataFrame loadPBI(std::string filename,
                   bool loadSNR = false,
                   bool loadNumPasses = false,
-                  bool loadRQ = false
+                  bool loadRQ = false,
+                  bool loadSC = false
                   ) {
   /* Because the pbi file has different values depending on what it contains,
    * I am planning to construct it as a list of vectors, rather than a
    * dataframe directly, and then update the attributes to convert to a data frame
    */
   //"/Users/nigel/git/pbbam/tests/data/dataset/bam_mapping_1.bam.pbi"
-  // std::string amendedName;
-  // if (has_suffix(filename, ".bam")) {
-  //   amendedName = filename;// + ".pbi";
-  // } else if (has_suffix(filename, ".xml")) {
-  //   amendedName = filename;
-  // } else {
-  //   Rcpp::stop("File must be either a BAM of Dataset (*.xml)");
-  // }
+
+  if (loadSC & !has_suffix(filename, ".scraps.bam")) {
+    Rcpp::stop("Can only set loadSC = TRUE if the filename passed ends with .scraps.bam");
+  }
+
   DataSet ds(filename);
   PbiRawData raw(ds);
   auto basicData = raw.BasicData();
@@ -397,11 +396,12 @@ DataFrame loadPBI(std::string filename,
   }
 
   // Load metrics from within the BAM?
-  if (loadSNR || loadNumPasses || loadRQ) {
+  if (loadSNR || loadNumPasses || loadRQ || loadSC) {
 
     /* Derek said every file in the pbi should be in the index, and every item
     should be ordered in the BAM so I am going to parse directly. */
     NumericVector snrA, snrC, snrG, snrT, np, rq;
+    IntegerVector sc;
     if (loadSNR) {
       snrA = NumericVector(raw.NumReads());
       snrC = NumericVector(raw.NumReads());
@@ -417,6 +417,12 @@ DataFrame loadPBI(std::string filename,
     if (loadRQ) {
       rq = NumericVector(raw.NumReads());
       df["rq"] = rq;
+    }
+    if (loadSC) {
+      sc = IntegerVector(raw.NumReads());
+      sc.attr("class") = "factor";
+      sc.attr("levels") = CharacterVector::create("Adapter", "Barcode", "Filtered", "LQRegion", "HQRegion");
+      df["sc"] = sc;
     }
 
 
@@ -457,6 +463,36 @@ DataFrame loadPBI(std::string filename,
             rq[i] = r.ReadAccuracy();
           } else {
             rq[i] = NumericVector::get_na();
+          }
+        }
+
+        if (loadSC) {
+          if(r.HasScrapRegionType()) {
+            // levels are "Adapter", "Barcode", "Filtered", "LQRegion", "HQRegion");
+            auto sc_type = r.ScrapRegionType();
+            int sc_int = 0;
+            switch (sc_type) {
+            case VirtualRegionType::ADAPTER:
+              sc_int = 1;
+              break;
+            case VirtualRegionType::BARCODE:
+              sc_int = 2;
+              break;
+            case VirtualRegionType::FILTERED:
+              sc_int = 3;
+              break;
+            case VirtualRegionType::LQREGION:
+              sc_int = 4;
+              break;
+            case VirtualRegionType::HQREGION:
+              sc_int = 5;
+              break;
+            default:
+              Rcpp::stop("Unknown sc tag found in BAM file while parsing.");
+            }
+            sc[i] = sc_int;
+          } else{
+            sc[i] = IntegerVector::get_na();
           }
         }
         i++;

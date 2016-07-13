@@ -6,7 +6,7 @@ bamname = system.file("extdata", "bam_mapping_1.bam", package="pbbamr")
 # Load the index table.
 ind = loadPBI(bamname)
 # Show the first 3 rows (transposed, note kable just formats)
-knitr::kable(t(ind[1:3,]))
+knitr::kable(t(ind[1,]))
 
 ## ---- echo=TRUE, results='asis'------------------------------------------
 library(ggplot2)
@@ -25,7 +25,7 @@ ggplot(ind, aes(x=errorRate)) + geom_density(fill="cyan") + theme_bw() +
 # Get the name of the sample indexed FASTA file
 fastaname = system.file("extdata", "lambdaNEB.fa", package="pbbamr")
 # let's just grab and plot one alignment.
-allAlns = loadDataAtOffsets(ind$offset[1], bamname, fastaname)
+allAlns = loadAlnsFromIndex(ind, fastaname, 1)
 # The alignments are returned as a list of data frames
 # in this case let's just look at the first
 aln = allAlns[[1]]
@@ -33,11 +33,11 @@ head(aln[1:6,])
 
 ## ---- echo=TRUE, collapse=TRUE, results='hold'---------------------------
 # Get all the alignments for all records in the index
-allAlns = loadDataAtOffsets(ind$offset, bamname, fastaname)
+allAlns = loadAlnsFromIndex(ind, fastaname)
 # let's combine the individual alignments into one big data frame
 alns = do.call(rbind, allAlns)
 # Now count the number of insertions
-insert_cnt = sum(alns$ref=="-")
+insert_cnt = sum(alns$ref == "-")
 # Do they match the pbi file?
 insert_cnt == sum(ind$inserts)
 
@@ -80,7 +80,7 @@ ifastaname = system.file("extdata", "All4Mer.V2.11.fna", package="pbbamr")
 ibamname = system.file("extdata", "internalsample.bam", package="pbbamr")
 # Load the index table.
 iind = loadPBI(ibamname)
-allAlns = loadDataAtOffsets(iind$offset, ibamname, ifastaname)
+allAlns = loadAlnsFromIndex(iind, ifastaname)
 # let's combine the individual alignments into one big data frame
 alns = do.call(rbind, allAlns)
 knitr::kable(head(alns[1:6,]))
@@ -89,7 +89,7 @@ ggplot(alns[alns$pkmid!=0,], aes(x=pkmid, fill=read)) + geom_density(alpha=.5) +
 ## ---- echo=TRUE, results='asis'------------------------------------------
 header = loadHeader(ibamname)
 # Print out some of the items available in the list
-knitr::kable(header$version, col.names = 'version')
+header$version
 knitr::kable(header$readgroups)
 knitr::kable(header$sequences)
 knitr::kable(header$programs)
