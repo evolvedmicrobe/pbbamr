@@ -48,8 +48,9 @@ test_that("fastafound", {
 })
 
 test_that("SC Loads", {
-  fasta = getFastaFileNameFromDatasetFile(refdset)
-  expect_equal("./sequence/lambdaNEB.fasta", fasta)
+  ibam = "SubreadSet/m54006_160504_020705.tiny.scraps.bam"
+  ind = loadPBI(ibam, loadSC = TRUE)
+  expect_equal(ind$sc[1], factor("LQRegion", levels = levels(ind$sc)))
 })
 
 
