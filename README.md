@@ -22,6 +22,7 @@ simply run the following command before those given above:
 
 [The online vignette](http://htmlpreview.github.io/?http://github.com/PacificBiosciences/pbbamr/blob/master/vignettes/pbbamr.html)
 
+[Version 0.3.0 changes](http://rpubs.com/evolvedmicrobe/195680)
 
 
 ## The origin of this package
