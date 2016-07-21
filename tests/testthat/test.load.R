@@ -72,3 +72,12 @@ test_that("subreadsBAMfound", {
   bam = getBAMNamesFromDatasetFile("SubreadSet/m54006_160504_020705.tiny.subreadset.xml")
   expect_equal("SubreadSet/m54006_160504_020705.tiny.subreads.bam", bam[1])
 })
+
+test_that("FilteringWorks", {
+  # Filter is RQ > 0.901
+  index = loadPBI("SubreadSet/m140905_042212_sidney_c100564852550000001823085912221377_s1_X0.subreadset.xml", loadRQ = TRUE)
+  index2 = loadPBI("SubreadSet/m140905_042212_sidney_c100564852550000001823085912221377_s1_X0_filtered.subreadset.xml", loadRQ = TRUE)
+  expect_true(min(index2$rq) > 0.901)
+  expect_true(min(index$rq) < 0.901)
+
+  })
