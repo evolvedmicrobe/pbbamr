@@ -284,6 +284,11 @@ bool has_suffix(const std::string &str, const std::string &suffix)
     str.compare(str.size() - suffix.size(), suffix.size(), suffix) == 0;
 }
 
+// Get a mechanism to subset data frames in R using the R side function.
+// See: http://stackoverflow.com/questions/22828361/rcpp-function-to-select-and-to-return-a-sub-dataframe
+// Note that the indexing for a function call to this is 1, not 0, based.
+Function subsetinR("[.data.frame");
+
 //' Load PBI BAM index file
 //'
 //' This function loads a pbi index file into a dataframe.  Depending on the
@@ -502,7 +507,32 @@ DataFrame loadPBI(std::string filename,
 
   // Now let's make the list a data.frame
   df.attr("class") = "data.frame";
-  df.attr("row.names") = seq_len(raw.NumReads());
+
+
+  // Remove any filtered entries if specified by the dataset
+  // Note: Likely faster to only parse the BAM for "filtered" entries
+  // but it is easier/cleaner to just edit at the end then interweave it
+  // in the construction of each vector above.
+  // Note: At some point transition to an Rcpp subset function defined here:
+  // http://kevinushey.github.io/blog/2015/01/24/understanding-data-frame-subsetting/
+  auto row_count = raw.NumReads();
+  if(has_suffix(filename, ".xml")) {
+    LogicalVector filter = LogicalVector(raw.NumReads());
+    const PbiFilter pbifilter = PbiFilter::FromDataSet(ds);
+    row_count = 0;
+    for (size_t i = 0; i < raw.NumReads(); ++i) {
+      if (pbifilter.Accepts(raw, i)) {
+            // use this record row
+            filter[i] = TRUE;
+        row_count++;
+      }
+    }
+    auto dfw = wrap(df);
+    auto filterw = wrap(filter);
+
+    df = subsetinR(dfw, filterw, R_MissingArg);
+  }
+  df.attr("row.names") = seq_len(row_count);
   df.attr("bam.file") = filename;
   return df;
 }
