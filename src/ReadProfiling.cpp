@@ -26,9 +26,12 @@
 using namespace Rcpp;
 using namespace PacBio::BAM;
 
+// This is the base class that all reporters derive from.
+// to implement a new report just add a derived class and add it to the vector
+// in `getReadReport`
 class PerReadMetricReporter {
 public:
-  virtual void ConsumeRead(const BamRecord& r, std::string ref, std::string seq) = 0;
+  virtual void ConsumeRead(const BamRecord& r, const std::string ref, const std::string seq) = 0;
   virtual List ProduceReport() = 0;
   virtual std::string GetName() = 0;
 };
@@ -40,7 +43,7 @@ private:
   int mismatches[BasePairs::N + 1][BasePairs::N + 1];
 
 public:
-  virtual void ConsumeRead(const BamRecord& r, std::string ref, std::string seq) {
+  virtual void ConsumeRead(const BamRecord& r, const std::string ref, const std::string seq) {
     for(int i = 0; i < ref.size(); i++) {
       auto tbp = BPtoIndex(ref[i]);
       auto rbp = BPtoIndex(seq[i]);
@@ -78,9 +81,44 @@ public:
 };
 
 class GapSizeReport : public PerReadMetricReporter {
-
-  private:
-    size_t
+private:
+  // This is the largest gap size I will record, after this it's 50+
+  const int maxGapSize = 50;
+  std::vector<int> refGapCounts;
+  std::vector<int> readGapCounts;
+  void countGapSizes(const std::string& str, std::vector<int>& vec) {
+    for (size_t i = 0; i < str.size(); i++) {
+      if(str[i] == '-') {
+        int gapSize = 0;
+        while(i < str.size() && str[i] == '-') {
+          gapSize++;
+          i++;
+        }
+        // Only record the gap size if it isn't at the end, otherwise
+        // we don't actually know what the size is.
+        if (i != str.size() && (i - gapSize) > 0) {
+          auto index = std::min(gapSize, maxGapSize);
+          // 0 -> 1 encoding change
+          vec[index - 1]++;
+        }
+      }
+    }
+  }
+public:
+  GapSizeReport() : refGapCounts(maxGapSize),
+                    readGapCounts(maxGapSize) {};
+  virtual void ConsumeRead(const BamRecord& r, const std::string ref, const std::string seq) {
+    countGapSizes(ref, refGapCounts);
+    countGapSizes(seq, readGapCounts);
+  }
+  virtual List ProduceReport() {
+    return DataFrame::create(_["gapSize"] = seq_len(maxGapSize),
+                             _["refCnts"] = refGapCounts,
+                             _["readCnts"] = readGapCounts);
+  }
+  virtual std::string GetName() {
+    return "gapSizes";
+  }
 };
 
 
@@ -105,6 +143,7 @@ List getReadReport(std::string datasetname, std::string indexedFastaName) {
   }
   std::vector<std::unique_ptr<PerReadMetricReporter> > reporters;
   reporters.emplace_back(new MismatchReport());
+  reporters.emplace_back(new GapSizeReport());
   IndexedFastaReader fasta(indexedFastaName);
 
   // Always get reads in native orientation.
@@ -123,7 +162,7 @@ List getReadReport(std::string datasetname, std::string indexedFastaName) {
     if (++interruptCounter % 100 == 0) Rcpp::checkUserInterrupt();
     std::string seq = read.Sequence(orientation, true, true);
     std::string ref = fasta.ReferenceSubsequence(read, orientation, true, true);
-    if (seq.size() != ref.size()) Rcpp::stop("Sequence and reference parts are of different size");
+    if (seq.size() != ref.size()) Rcpp::stop("Sequence and reference are different sizes");
     for (auto& reporter : reporters) {
       reporter->ConsumeRead(read, ref, seq);
     }
