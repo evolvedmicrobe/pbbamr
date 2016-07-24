@@ -75,7 +75,7 @@ public:
                                _["cnts"] = cnts);
   }
   virtual std::string GetName() {
-    return "Mismatches";
+    return "mismatches";
   }
 };
 
