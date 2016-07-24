@@ -137,3 +137,17 @@ loadRegionsTable <- function(subreadsBamName) {
     .Call('pbbamr_loadRegionsTable', PACKAGE = 'pbbamr', subreadsBamName)
 }
 
+#' Get Per Read Metrics
+#'
+#' This function loads a dataset and parses each read, passing it to a class
+#' which collects metrics on each read.  It returns a list of data frames, one
+#' for each metric analyzed.
+#'
+#' @param dataset The dataset/BAM file name.
+#' @param indexedFastaName The fasta file used in the alignment.
+#' @export
+#' @examples
+getReadReport <- function(datasetname, indexedFastaName) {
+    .Call('pbbamr_getReadReport', PACKAGE = 'pbbamr', datasetname, indexedFastaName)
+}
+

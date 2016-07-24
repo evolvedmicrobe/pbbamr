@@ -1,3 +1,4 @@
+#include <fstream>
 #include <Rcpp.h>
 
 #include <boost/algorithm/string.hpp>
@@ -16,7 +17,7 @@
 #include <pbbam/virtual/VirtualRegion.h>
 #include <pbbam/virtual/VirtualRegionType.h>
 
-#include <fstream>
+#include "utils.h"
 
 using namespace Rcpp;
 using namespace PacBio::BAM;
@@ -40,36 +41,7 @@ char getRandomBase() {
 IntegerVector createFactorFromSeqString(const std::string& seq) {
   IntegerVector v(seq.length());
   for(int i = 0; i < seq.length(); i++ ) {
-    char bp = seq[i];
-    switch (bp) {
-      case 'A':
-      case 'a':
-        v[i] = 1;
-        break;
-      case 'C':
-      case 'c':
-        v[i] = 2;
-        break;
-      case 'G':
-      case 'g':
-        v[i] = 3;
-        break;
-      case 'T':
-      case 't':
-        v[i] = 4;
-        break;
-      case '-':
-        v[i] = 5;
-        break;
-    case 'N':
-    case 'n':
-        v[i] = 6;
-        break;
-    default:
-        std::string msg = "Character was not an A, C, G, T, N or -. Check that the data you are loading "
-                          "(BAM or Reference Fasta) does not contain weird characters.  Strange Character was: ";
-        Rcpp::stop(msg + bp);
-      }
+    v[i] = BPtoIndex(seq[i]);
   }
   v.attr("class") = "factor";
   v.attr("levels") = CharacterVector::create("A", "C", "G", "T", "-", "N");
@@ -81,7 +53,7 @@ IntegerVector createFactorFromSeqString(const std::string& seq) {
    dinucleotide context vector.
 */
 IntegerVector createDinucleotideFactorFromSeqs(const IntegerVector& curBP,
-                                              const IntegerVector& nextBP) {
+                                               const IntegerVector& nextBP) {
   IntegerVector ctx(curBP.size());
   for(int i = 0; i < curBP.size(); i++ ) {
     auto nxt = nextBP[i];
@@ -146,7 +118,7 @@ std::pair<std::string, std::string> _sampleAndTrimSeqs(const std::string& read,
   // Sample down if needed
   auto n = read.length();
   size_t startRow, endRow;
-  if (trimToLength !=0 && n > trimToLength) {
+  if (trimToLength != 0 && n > trimToLength) {
       auto maxRow = n - trimToLength + 1;
       startRow = static_cast<int>(maxRow * R::runif(0,1));
       endRow  = std::min(n, startRow + trimToLength);
