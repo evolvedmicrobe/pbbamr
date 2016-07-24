@@ -36,7 +36,6 @@ public:
   virtual std::string GetName() = 0;
 };
 
-// Collect counts of mismatches between bases.
 class MismatchReport : public PerReadMetricReporter {
 private:
   // Row is ref, column is read.
@@ -121,6 +120,41 @@ public:
   }
 };
 
+class IndelBaseReport : public PerReadMetricReporter {
+private:
+  std::vector<int> refDeletionCounts;
+  std::vector<int> readInsertionCounts;
+  void countMissingBases(const std::string& seq1, const std::string& seq2,
+                         std::vector<int>& tallyier) {
+    for (size_t i = 0; i < seq1.size(); i++) {
+      if(seq1[i] == '-') {
+          auto index = BPtoIndex(seq2[i]);
+          tallyier[index - 1]++;
+      }
+    }
+  }
+public:
+  IndelBaseReport() : refDeletionCounts(BasePairs::GetLargestBPIndex()),
+                      readInsertionCounts(BasePairs::GetLargestBPIndex()) {};
+  virtual void ConsumeRead(const BamRecord& r, const std::string ref, const std::string seq) {
+    countMissingBases(seq, ref, refDeletionCounts);
+    countMissingBases(ref, seq, readInsertionCounts);
+  }
+  virtual List ProduceReport() {
+    IntegerVector bps = seq_len(BasePairs::GetLargestBPIndex());
+    bps.attr("class") = "factor";
+    bps.attr("levels") = BasePairs::GetBPsAtIndex();
+
+
+    return DataFrame::create(_["bp"] =bps,
+                             _["delFromRefCnt"] = refDeletionCounts,
+                             _["insertIntoReadCnt"] = readInsertionCounts);
+  }
+  virtual std::string GetName() {
+    return "indelCnts";
+  }
+};
+
 
 //' Get Per Read Metrics
 //'
@@ -144,6 +178,8 @@ List getReadReport(std::string datasetname, std::string indexedFastaName) {
   std::vector<std::unique_ptr<PerReadMetricReporter> > reporters;
   reporters.emplace_back(new MismatchReport());
   reporters.emplace_back(new GapSizeReport());
+  reporters.emplace_back(new IndelBaseReport());
+
   IndexedFastaReader fasta(indexedFastaName);
 
   // Always get reads in native orientation.

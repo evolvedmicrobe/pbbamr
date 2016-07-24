@@ -7,6 +7,12 @@ namespace BasePairs {
   const int T = 4;
   const int Gap = 5;
   const int N = 6;
+  inline int GetLargestBPIndex() {
+    return N;
+  }
+  inline Rcpp::CharacterVector GetBPsAtIndex() {
+    return Rcpp::CharacterVector::create("A", "C", "G", "T", "-", "N");
+  }
 }
 
 bool FileExists(const std::string& path);
