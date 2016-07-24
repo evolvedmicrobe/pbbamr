@@ -155,7 +155,41 @@ public:
   }
 };
 
+class ClippingFrequencyReport : public PerReadMetricReporter {
+private:
+  size_t clippedBases;
+  size_t unclippedBases;
+public:
+  virtual void ConsumeRead(const BamRecord& r, const std::string ref, const std::string seq) {
+    const auto cigar = r.CigarData(false);
+    auto cigarIter = cigar.cbegin();
+    auto cigarEnd  = cigar.cend();
+    for (; cigarIter != cigarEnd; ++cigarIter) {
+      const auto op = (*cigarIter);
+      const auto type = op.Type();
+      if (type == CigarOperationType::HARD_CLIP ||
+          type == CigarOperationType::SOFT_CLIP ||
+          type == CigarOperationType::PADDING ||
+          type == CigarOperationType::REFERENCE_SKIP ||
+          type == CigarOperationType::UNKNOWN_OP) {
+        clippedBases += op.Length();
+      } else {
+        unclippedBases += op.Length();
+      }
+    }
+  }
+  virtual List ProduceReport() {
+    IntegerVector states = seq_len(2);
+    states.attr("class") = "factor";
+    states.attr("levels") = CharacterVector::create("Clipped", "UnClipped");
+    return DataFrame::create(_["state"] = states,
+                             _["cnts"] = NumericVector::create(clippedBases, unclippedBases));
+  }
+  virtual std::string GetName() {
+    return "clipping";
+  }
 
+};
 //' Get Per Read Metrics
 //'
 //' This function loads a dataset and parses each read, passing it to a class
@@ -179,6 +213,7 @@ List getReadReport(std::string datasetname, std::string indexedFastaName) {
   reporters.emplace_back(new MismatchReport());
   reporters.emplace_back(new GapSizeReport());
   reporters.emplace_back(new IndelBaseReport());
+  reporters.emplace_back(new ClippingFrequencyReport());
 
   IndexedFastaReader fasta(indexedFastaName);
 
