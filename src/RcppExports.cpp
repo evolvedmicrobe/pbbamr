@@ -132,3 +132,15 @@ BEGIN_RCPP
     return __result;
 END_RCPP
 }
+// getReadReport
+List getReadReport(std::string datasetname, std::string indexedFastaName);
+RcppExport SEXP pbbamr_getReadReport(SEXP datasetnameSEXP, SEXP indexedFastaNameSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< std::string >::type datasetname(datasetnameSEXP);
+    Rcpp::traits::input_parameter< std::string >::type indexedFastaName(indexedFastaNameSEXP);
+    __result = Rcpp::wrap(getReadReport(datasetname, indexedFastaName));
+    return __result;
+END_RCPP
+}
