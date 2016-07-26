@@ -81,8 +81,9 @@ public:
 
 class GapSizeReport : public PerReadMetricReporter {
 private:
-  // This is the largest gap size I will record, after this it's 50+
-  const int maxGapSize = 50;
+  // This is the largest gap size I will record, after this it's truncated to
+  // this value
+  const int maxGapSize = 10;
   std::vector<int> refGapCounts;
   std::vector<int> readGapCounts;
   void countGapSizes(const std::string& str, std::vector<int>& vec) {
