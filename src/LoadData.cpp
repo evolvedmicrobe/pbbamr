@@ -408,6 +408,12 @@ DataFrame loadPBI(std::string filename,
       BamReader br(fn.Filename());
       BamRecord r;
       while (br.GetNext(r) ) {
+
+        // Check for interrupt
+        if (i % 50 == 0 ) {
+          Rcpp::checkUserInterrupt();
+        }
+
         // Verify data matches, just check hole for now.
         // If these don't match, the index and order in the file may be different.
         if(r.HoleNumber() != holes[i]) {
