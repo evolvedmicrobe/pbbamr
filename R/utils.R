@@ -1,8 +1,9 @@
 ### Collection of helper functions to make manipulating data easier
 
 #' Helper function for verifying arguments
+#' @export
 chkClass <- function(var, classname, msg) {
-  if (class(var) != classname) {
+  if (!(classname %in% class(var))) {
     stop(msg)
   }
 }
