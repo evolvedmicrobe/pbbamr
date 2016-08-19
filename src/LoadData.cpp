@@ -566,6 +566,8 @@ List loadDataAtOffsets(CharacterVector offsets, std::string bamName, std::string
 
         if (r.HasIPD()) {
             auto ipds = r.IPD(Orientation::NATIVE, true, true).Data();
+            if (seq.size() != ipds.size()) {
+              Rcpp::stop("Sequence and IPD parts are of different size"); }
             auto intarr = IntegerVector(ipds.size());
             for(int i = 0; i < ipds.size(); i++) {
               intarr[i] = ipds[i];
@@ -575,6 +577,8 @@ List loadDataAtOffsets(CharacterVector offsets, std::string bamName, std::string
 
         if (r.HasPulseWidth()) {
             auto pws = r.PulseWidth(Orientation::NATIVE, true, true).Data();
+            if (seq.size() != pws.size()) {
+              Rcpp::stop("Sequence and pulse width parts are of different size"); }
             auto intarr = IntegerVector(pws.size());
             for(int i = 0; i < pws.size(); i++) {
               intarr[i] = pws[i];
@@ -591,11 +595,17 @@ List loadDataAtOffsets(CharacterVector offsets, std::string bamName, std::string
         }
 
         if(r.HasPkmid()) {
-          df["pkmid"] = r.Pkmid(Orientation::NATIVE, true, true);
+          auto tmp = r.Pkmid(Orientation::NATIVE, true, true);
+          if (seq.size() != tmp.size()) {
+            Rcpp::stop("Sequence and Pkmid parts are of different size"); }
+          df["pkmid"] = tmp;
         }
 
         if (r.HasStartFrame()) {
-          df["sf"] = r.StartFrame(Orientation::NATIVE, true, true);
+          auto tmp = r.StartFrame(Orientation::NATIVE, true, true);
+          if (seq.size() != tmp.size()) {
+            Rcpp::stop("Sequence and Start Frame parts are of different size"); }
+          df["sf"] = tmp;
         }
 
         df.attr("class") = "data.frame";
