@@ -642,7 +642,7 @@ List loadSubreadsAtOffsets(CharacterVector offsets, std::string bamName) {
     BamReader reader(bamName);
     int n = offsets.size();
     List results(n);
-    for(int i=0; i < n; i++) {
+    for(int i = 0; i < n; i++) {
       // Check for interrupt
       if (i % 50 == 0 ) {
         Rcpp::checkUserInterrupt();
@@ -655,8 +655,48 @@ List loadSubreadsAtOffsets(CharacterVector offsets, std::string bamName) {
       if (reader.GetNext(r)) {
         std::string seq = r.Sequence();
         std::string name = r.FullName();
-        auto fseq = List::create( Named("name") = name,
-                                  Named("read") = seq);
+        CharacterVector names(seq.size(), name);
+        auto fseq = List::create( Named("name") = names,
+                                  Named("read") = createFactorFromSeqString(seq));
+
+        if (r.HasIPD()) {
+          auto ipds = r.IPD().Data();
+          if (seq.size() != ipds.size()) {
+            Rcpp::stop("Sequence and IPD parts are of different size"); }
+          auto intarr = IntegerVector(ipds.size());
+          for(int i = 0; i < ipds.size(); i++) {
+            intarr[i] = ipds[i];
+          }
+          fseq["ipd"] = intarr;
+        }
+
+        if (r.HasPulseWidth()) {
+          auto pws = r.PulseWidth().Data();
+          if (seq.size() != pws.size()) {
+            Rcpp::stop("Sequence and pulse width parts are of different size"); }
+          auto intarr = IntegerVector(pws.size());
+          for(int i = 0; i < pws.size(); i++) {
+            intarr[i] = pws[i];
+          }
+          fseq["pw"] = intarr;
+        }
+
+        if(r.HasPkmid()) {
+          auto tmp = r.Pkmid();
+          if (seq.size() != tmp.size()) {
+            Rcpp::stop("Sequence and Pkmid parts are of different size"); }
+          fseq["pkmid"] = tmp;
+        }
+
+        if (r.HasStartFrame()) {
+          auto tmp = r.StartFrame();
+          if (seq.size() != tmp.size()) {
+            Rcpp::stop("Sequence and Start Frame parts are of different size"); }
+          fseq["sf"] = tmp;
+        }
+
+        fseq.attr("class") = "data.frame";
+        fseq.attr("row.names") = seq_len(seq.size());
         results[i] = fseq;
       } else{
         Rcpp::stop("No BAM record found at the given offset");

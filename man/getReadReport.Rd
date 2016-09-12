@@ -12,7 +12,8 @@ getReadReport(datasetname, indexedFastaName)
 \item{dataset}{The dataset/BAM file name.}
 }
 \description{
-This function loads a dataset and parses each read, passing it to
-a class which collects metrics on each read.  At the end of he
+This function loads a dataset and parses each read, passing it to a class
+which collects metrics on each read.  It returns a list of data frames, one
+for each metric analyzed.
 }
 
