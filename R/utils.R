@@ -101,6 +101,7 @@ getHoleY = function(holeNumber) {
 #' @param index A data frame returned by loadPBI
 #' @param indexed_fasta_name A character vector for the returned fasta file.
 #' @param rows A list of rows to select the data from (default = use all data)
+#' @seealso loadReadsFromIndex
 #' @return A list of alignments as data frames
 #' @export
 loadAlnsFromIndex <- function(index, indexed_fasta_name, rows = NULL ) {
@@ -121,4 +122,30 @@ loadAlnsFromIndex <- function(index, indexed_fasta_name, rows = NULL ) {
   })
 }
 
+
+
+#' Given a data frame returned by loadPBI  load a list of the unaligned sequencing data.
+#' (this is the unaligned equivalent of loadAlnsFromIndex)
+#'
+#' @param index A data frame returned by loadPBI
+#' @param rows A list of rows to select the data from (default = use all data)
+#' @seealso loadAlnsFromIndex
+#' @return A list of alignments as data frames
+#' @export
+loadReadsFromIndex <- function(index, rows = NULL ) {
+  chkClass(index, "data.frame", "Index is expected to be a data frame.")
+
+  if (sum(colnames(index) %in% c("file", "offset")) != 2) {
+    stop("Index was expected to have a file and offset column.")
+  }
+
+  if (!is.null(rows)) {
+    index = index[rows,]
+  }
+
+  lapply(1:nrow(index), function(i) {
+    bam_name = as.character(index$file[i])
+    loadSubreadsAtOffsets(index$offset[i], bamName = bam_name)[[1]]
+  })
+}
 

@@ -60,6 +60,13 @@ test_that("Start Frame Loads", {
   expect_equal(ind$sc[1], factor("LQRegion", levels = levels(ind$sc)))
 })
 
+test_that("Unaligned Data Loads", {
+  # Load an internal sample with name/read/ipd/pw/pkmid/sf
+  ibam = system.file("extdata", "internalsample.bam", package="pbbamr")
+  ind = loadPBI(ibam)
+  data = loadReadsFromIndex(ind, 1:10)
+})
+
 
 test_that("alignedBAMfound", {
   bam = getBAMNamesFromDatasetFile(bamdset)
