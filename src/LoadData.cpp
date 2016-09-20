@@ -344,10 +344,10 @@ DataFrame loadPBI(std::string filename,
       }
     }catch(...) {}
     df["ref"] = mappedtId;
-    df["tstart"] = mappedData.tStart_;
-    df["tend"] = mappedData.tEnd_;
-    df["astart"] = mappedData.aStart_;
-    df["aend"] = mappedData.aEnd_;
+    df["tstart"] = IntegerVector(mappedData.tStart_.begin(), mappedData.tStart_.end());
+    df["tend"] = IntegerVector(mappedData.tEnd_.begin(), mappedData.tEnd_.end());
+    df["astart"] = IntegerVector(mappedData.aStart_.begin(), mappedData.aStart_.end());
+    df["aend"] = IntegerVector(mappedData.aEnd_.begin(), mappedData.aEnd_.end());
     df["rc"] = LogicalVector(mappedData.revStrand_.begin(), mappedData.revStrand_.end());
     df["matches"] = mappedData.nM_;
     df["mismatches"] = mappedData.nMM_;

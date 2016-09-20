@@ -4,6 +4,7 @@ library(pbbamr)
 #ofile = "/Users/nigel/git/pbbamr/tests/testthat/loadedAln.Rd"
 #sbamdset = "/Users/nigel/git/pbbamr/tests/testthat/SubreadSet/m54006_160504_020705.tiny.subreadset.xml"
 #setwd("/Users/nigel/git/pbbamr/tests/testthat/")
+#setwd("/Users/ytian/Documents/Git/pbbamr/tests/testthat/")
 bfile = "test.aligned.bam"
 ffile = "lambdaNEB.fa"
 ofile = "loadedAln.Rd"
@@ -88,3 +89,11 @@ test_that("FilteringWorks", {
   expect_true(min(index$rq) < 0.901)
 
   })
+
+test_that("IndexLoadAsInteger", {
+  d = loadPBI(bfile)
+  index <- c("tstart", "tend", "astart", "aend")
+  for (i in index) {
+    expect_equal(class(d[,i]), "integer")
+  }
+})
