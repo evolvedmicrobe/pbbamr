@@ -122,7 +122,22 @@ loadAlnsFromIndex <- function(index, indexed_fasta_name, rows = NULL ) {
   })
 }
 
-
+#' Get the full path to a movie from a referenceset.xml file
+#' and append the current path to it if it is a local reference.
+#'
+#' @param  p A referenceset XML file.
+#' @export
+getReferencePath <- function(p) {
+  p = normalizePath(p)
+  dp = pbbamr::getFastaFileNameFromDatasetFile(p)
+  split_path <- function(x) if (dirname(x) == x) x else c(basename(x),split_path(dirname(x)))
+  ap = rev(split_path(dp))
+  if (ap[1] == ".") {
+    return(do.call(file.path, as.list(c(dirname(p), ap[2:length(ap)]))))
+  } else {
+    return(dp)
+  }
+}
 
 #' Given a data frame returned by loadPBI  load a list of the unaligned sequencing data.
 #' (this is the unaligned equivalent of loadAlnsFromIndex)
@@ -148,4 +163,6 @@ loadReadsFromIndex <- function(index, rows = NULL ) {
     loadSubreadsAtOffsets(index$offset[i], bamName = bam_name)[[1]]
   })
 }
+
+
 
