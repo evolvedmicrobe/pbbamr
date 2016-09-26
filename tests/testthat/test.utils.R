@@ -42,3 +42,10 @@ test_that("holeNumberConversions", {
   expect_equal(y, 95)
 })
 
+test_that("loadReferencePath", {
+  expected = normalizePath("./ReferenceSet/lambdaNEB/sequence/lambdaNEB.fasta")
+  name = getReferencePath("./ReferenceSet/lambdaNEB/referenceset.xml")
+  expect_equal(name, expected)
+  expect_true(file.exists(name))
+})
+
