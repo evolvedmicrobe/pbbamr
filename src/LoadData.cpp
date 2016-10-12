@@ -844,7 +844,7 @@ List loadHMMfromBAM(CharacterVector offsets,
 }
 
 
-  List _generatePairFromString(const std::string& read, const std::string& ref, size_t brk1, size_t brk2) {
+  DataFrame _generatePairFromString(const std::string& read, const std::string& ref, size_t brk1, size_t brk2) {
     // we should always have a break occur at a position with a matching base before, so we will grab that
     if (brk1 < 1) {
       Rcpp::stop("Break specified before 1! Shouldn't be possible as we require two matching bases at each breakpoint");
@@ -852,36 +852,39 @@ List loadHMMfromBAM(CharacterVector offsets,
     auto len = brk2 - brk1;
     auto new_read = read.substr(brk1, len);
     auto new_ref = ref.substr(brk1, len);
-    // Trim out gaps
-    boost::erase_all(new_ref, "-");
-    boost::erase_all(new_read, "-");
 
 
-    auto completeString = ref.substr(brk1, len + 1);
-    boost::erase_all(completeString, "-");
-    auto full_ref = createFactorFromSeqString(completeString);
-    auto curBP = IntegerVector(full_ref.size() - 1);
-    auto nextBP = IntegerVector(full_ref.size() - 1);
-    for(int i = 0; i < (full_ref.size() - 1); i++) {
-      curBP[i] = full_ref[i];
-      nextBP[i] = full_ref[i + 1];
-    }
-    curBP.attr("class") = "factor";
-    nextBP.attr("class") = "factor";
-    curBP.attr("levels") = full_ref.attr("levels");
-    nextBP.attr("levels") = full_ref.attr("levels");
-    auto ctx = createDinucleotideFactorFromSeqs(curBP, nextBP);
+    return DataFrame::create(Named("read") = createFactorFromSeqString(new_read),
+                        Named("ref") = createFactorFromSeqString(new_ref));
 
-    auto df =  List::create(Named("nextBP") = nextBP,
-                            Named("currBP") = curBP,
-                            Named("CTX") = ctx);
 
-    df.attr("class") = "data.frame";
-    df.attr("row.names") = seq_len(ctx.size());
-    auto val = List::create(Named("covars") = df,
-                            Named("outcome") = CharacterVector(new_read),
-                            Named("model") = CharacterVector(new_ref));
-    return val;
+    // // Trim out gaps
+    // boost::erase_all(new_ref, "-");
+    // boost::erase_all(new_read, "-");
+    //
+    //
+    // auto completeString = ref.substr(brk1, len + 1);
+    // boost::erase_all(completeString, "-");
+    // auto full_ref = createFactorFromSeqString(completeString);
+    // auto curBP = IntegerVector(full_ref.size() - 1);
+    // auto nextBP = IntegerVector(full_ref.size() - 1);
+    // for(int i = 0; i < (full_ref.size() - 1); i++) {
+    //   curBP[i] = full_ref[i];
+    //   nextBP[i] = full_ref[i + 1];
+    // }
+    // curBP.attr("class") = "factor";
+    // nextBP.attr("class") = "factor";
+    // curBP.attr("levels") = full_ref.attr("levels");
+    // nextBP.attr("levels") = full_ref.attr("levels");
+    // auto ctx = createDinucleotideFactorFromSeqs(curBP, nextBP);
+    //
+    //
+    // df.attr("class") = "data.frame";
+    // df.attr("row.names") = seq_len(ctx.size());
+    // auto val = List::create(Named("covars") = df,
+    //                         Named("outcome") = CharacterVector(new_read),
+    //                         Named("model") = CharacterVector(new_ref));
+    // return val;
   }
 
 
