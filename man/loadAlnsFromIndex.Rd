@@ -19,4 +19,7 @@ A list of alignments as data frames
 \description{
 Given a data frame returned by loadPBI and a fasta file, load a list of alignments
 }
+\seealso{
+loadReadsFromIndex
+}
 

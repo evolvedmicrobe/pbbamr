@@ -2,7 +2,8 @@
 % Please edit documentation in R/utils.R
 \name{loadReadsFromIndex}
 \alias{loadReadsFromIndex}
-\title{Given a data frame returned by loadPBI and a fasta file, load a list of data}
+\title{Given a data frame returned by loadPBI  load a list of the unaligned sequencing data.
+(this is the unaligned equivalent of loadAlnsFromIndex)}
 \usage{
 loadReadsFromIndex(index, rows = NULL)
 }
@@ -15,6 +16,10 @@ loadReadsFromIndex(index, rows = NULL)
 A list of alignments as data frames
 }
 \description{
-Given a data frame returned by loadPBI and a fasta file, load a list of data
+Given a data frame returned by loadPBI  load a list of the unaligned sequencing data.
+(this is the unaligned equivalent of loadAlnsFromIndex)
+}
+\seealso{
+loadAlnsFromIndex
 }
 
