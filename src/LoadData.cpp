@@ -32,7 +32,7 @@ bool FileExists(const std::string& path)
 template<typename T>
 class CachedReader {
 private:
-  std::unique_ptr<T> reader = nullptr;
+  std::unique_ptr<T> reader;
   std::string cached_name;
 public:
   T* GetReader(std::string fName) {
@@ -586,7 +586,7 @@ List loadDataAtOffsets(CharacterVector offsets, std::string bamName, std::string
         std::string ref = fasta->ReferenceSubsequence(r, orientation, true, true);
         if (seq.size() != ref.size())
           Rcpp::stop("Sequence and reference parts are of different size");
-  // make this a list
+        // make this a list
         auto df = List::create(Named("read") = createFactorFromSeqString(seq),
                                Named("ref") = createFactorFromSeqString(ref));
 
