@@ -36,10 +36,10 @@ private:
   std::string cached_name;
 public:
   T* GetReader(std::string fName) {
-    if(!FileExists(fName)) {
-      stop("File does not exist or is not readable.");
-    }
     if (!reader || (fName != cached_name)) {
+      if(!FileExists(fName)) {
+        stop("File does not exist or is not readable.");
+      }
       Rcout << "recreating handle" << std::endl;
       Rcout << fName << std::endl;
       Rcout << cached_name << std::endl;
