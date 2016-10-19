@@ -40,10 +40,6 @@ public:
       if(!FileExists(fName)) {
         stop("File does not exist or is not readable.");
       }
-      Rcout << "recreating handle" << std::endl;
-      Rcout << fName << std::endl;
-      Rcout << cached_name << std::endl;
-
       reader.reset(new T(fName));
       cached_name = fName;
     }
