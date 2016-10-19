@@ -558,15 +558,6 @@ DataFrame loadPBI(std::string filename,
 // [[Rcpp::export]]
 List loadDataAtOffsets(CharacterVector offsets, std::string bamName, std::string indexedFastaName) {
   try {
-
-    if(!FileExists(indexedFastaName)) {
-      stop("Fasta file does not exist or is not readable.");
-    }
-
-    if(!FileExists(bamName)) {
-      stop("BAM file does not exist or is not readable.");
-    }
-
     IndexedFastaReader* fasta = CachedFastaReader.GetReader(indexedFastaName);
     BamReader* reader = CachedBamReader.GetReader(bamName);
 
