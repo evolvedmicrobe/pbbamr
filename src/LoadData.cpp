@@ -22,12 +22,37 @@
 using namespace Rcpp;
 using namespace PacBio::BAM;
 
-
 bool FileExists(const std::string& path)
 {
   std::ifstream ifile(path.c_str());
   return ifile.good();
 }
+
+// Some globals
+template<typename T>
+class CachedReader {
+private:
+  std::unique_ptr<T> reader = nullptr;
+  std::string cached_name;
+public:
+  T* GetReader(std::string fName) {
+    if(!FileExists(fName)) {
+      stop("File does not exist or is not readable.");
+    }
+    if (!reader || (fName != cached_name)) {
+      reader.reset(new T(fName));
+      cached_name = fName;
+    }
+    return reader.get();
+  }
+};
+
+static CachedReader<BamReader> CachedBamReader;
+static CachedReader<IndexedFastaReader> CachedFastaReader;
+
+
+
+
 
 char getRandomBase() {
   char bases[] = {'A', 'C', 'G', 'T'};
@@ -405,6 +430,7 @@ DataFrame loadPBI(std::string filename,
 
     int i=0;
     for(auto fn : fileNames) {
+      // Don't use caching here, there is no next in that case!
       BamReader br(fn.Filename());
       BamRecord r;
       while (br.GetNext(r) ) {
@@ -537,8 +563,8 @@ List loadDataAtOffsets(CharacterVector offsets, std::string bamName, std::string
       stop("BAM file does not exist or is not readable.");
     }
 
-    IndexedFastaReader fasta(indexedFastaName);
-    BamReader reader(bamName);
+    IndexedFastaReader* fasta = CachedFastaReader.GetReader(indexedFastaName);
+    BamReader* reader = CachedBamReader.GetReader(bamName);
 
     // Always get reads in native orientation.
     auto orientation = Orientation::NATIVE;
@@ -552,12 +578,12 @@ List loadDataAtOffsets(CharacterVector offsets, std::string bamName, std::string
       // back convert from string to long.
       std::string offset_string = as<std::string>(offsets[i]);
       long offset = std::stol(offset_string);
-      reader.VirtualSeek(offset);
+      reader->VirtualSeek(offset);
       BamRecord r;
-      if (reader.GetNext(r)) {
+      if (reader->GetNext(r)) {
 
         std::string seq = r.Sequence(orientation, true, true);
-        std::string ref = fasta.ReferenceSubsequence(r, orientation, true, true);
+        std::string ref = fasta->ReferenceSubsequence(r, orientation, true, true);
         if (seq.size() != ref.size())
           Rcpp::stop("Sequence and reference parts are of different size");
   // make this a list
