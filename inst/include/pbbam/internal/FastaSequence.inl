@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2015, Pacific Biosciences of California, Inc.
+// Copyright (c) 2016, Pacific Biosciences of California, Inc.
 //
 // All rights reserved.
 //
@@ -34,53 +34,27 @@
 // SUCH DAMAGE.
 //
 // File Description
-/// \file BamRecord.inl
-/// \brief Inline implementations for the BamRecord class.
+/// \file FastaSequence.inl
+/// \brief Inline implementations for the FastaSequence class.
 //
 // Author: Derek Barnett
 
-#include "pbbam/BamRecord.h"
+#include "pbbam/FastaSequence.h"
 
 namespace PacBio {
 namespace BAM {
 
-inline BamRecord BamRecord::Clipped(const BamRecord& input,
-                                    const ClipType clipType,
-                                    const PacBio::BAM::Position start,
-                                    const PacBio::BAM::Position end)
-{
-    return input.Clipped(clipType, start, end);
-}
+inline FastaSequence::FastaSequence(std::string name,
+                                    std::string bases)
+    : name_{std::move(name)}
+    , bases_{std::move(bases)}
+{ }
 
-inline BamRecord BamRecord::Clipped(const ClipType clipType,
-                                    const PacBio::BAM::Position start,
-                                    const PacBio::BAM::Position end) const
-{
-    BamRecord result(*this);
-    result.Clip(clipType, start, end);
-    return result;
-}
+inline std::string FastaSequence::Bases(void) const
+{ return bases_; }
 
-inline BamRecord BamRecord::Mapped(const BamRecord& input,
-                                   const int32_t referenceId,
-                                   const Position refStart,
-                                   const Strand strand,
-                                   const Cigar& cigar,
-                                   const uint8_t mappingQuality)
-{
-    return input.Mapped(referenceId, refStart, strand, cigar, mappingQuality);
-}
-
-inline BamRecord BamRecord::Mapped(const int32_t referenceId,
-                                   const Position refStart,
-                                   const Strand strand,
-                                   const Cigar& cigar,
-                                   const uint8_t mappingQuality) const
-{
-    BamRecord result(*this);
-    result.Map(referenceId, refStart, strand, cigar, mappingQuality);
-    return result;
-}
+inline std::string FastaSequence::Name(void) const
+{ return name_; }
 
 } // namespace BAM
 } // namespace PacBio
