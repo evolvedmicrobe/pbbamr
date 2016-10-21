@@ -1,6 +1,6 @@
 ---
 title: "Examining PacBio data with pbbamr"
-author: "Nigel Delaney"
+author: "Nigel Delaney, Yuan Tian"
 date: '`r Sys.Date()`'
 output: rmarkdown::html_vignette
 vignette: >
