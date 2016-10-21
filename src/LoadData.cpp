@@ -612,14 +612,14 @@ List loadDataAtOffsets(CharacterVector offsets, std::string bamName, std::string
         }
 
         if(r.HasPkmid()) {
-          auto tmp = r.Pkmid(Orientation::NATIVE, true, true);
+          auto tmp = r.Pkmid(Orientation::NATIVE, true, true, PulseBehavior::BASECALLS_ONLY);
           if (seq.size() != tmp.size()) {
             Rcpp::stop("Sequence and Pkmid parts are of different size"); }
           df["pkmid"] = tmp;
         }
 
         if (r.HasStartFrame()) {
-          auto tmp = r.StartFrame(Orientation::NATIVE, true, true);
+          auto tmp = r.StartFrame(Orientation::NATIVE, true, true, PulseBehavior::BASECALLS_ONLY);
           if (seq.size() != tmp.size()) {
             Rcpp::stop("Sequence and Start Frame parts are of different size"); }
           df["sf"] = tmp;

@@ -34,53 +34,59 @@
 // SUCH DAMAGE.
 //
 // File Description
-/// \file BamRecord.inl
-/// \brief Inline implementations for the BamRecord class.
+/// \file IRecordWriter.h
+/// \brief Defines the IRecordWriter interface.
 //
 // Author: Derek Barnett
 
-#include "pbbam/BamRecord.h"
+#ifndef IRECORDWRITER_H
+#define IRECORDWRITER_H
 
 namespace PacBio {
 namespace BAM {
 
-inline BamRecord BamRecord::Clipped(const BamRecord& input,
-                                    const ClipType clipType,
-                                    const PacBio::BAM::Position start,
-                                    const PacBio::BAM::Position end)
-{
-    return input.Clipped(clipType, start, end);
-}
+class BamRecord;
+class BamRecordImpl;
 
-inline BamRecord BamRecord::Clipped(const ClipType clipType,
-                                    const PacBio::BAM::Position start,
-                                    const PacBio::BAM::Position end) const
+class IRecordWriter
 {
-    BamRecord result(*this);
-    result.Clip(clipType, start, end);
-    return result;
-}
+public:
+    virtual ~IRecordWriter(void);
 
-inline BamRecord BamRecord::Mapped(const BamRecord& input,
-                                   const int32_t referenceId,
-                                   const Position refStart,
-                                   const Strand strand,
-                                   const Cigar& cigar,
-                                   const uint8_t mappingQuality)
-{
-    return input.Mapped(referenceId, refStart, strand, cigar, mappingQuality);
-}
+public:
 
-inline BamRecord BamRecord::Mapped(const int32_t referenceId,
-                                   const Position refStart,
-                                   const Strand strand,
-                                   const Cigar& cigar,
-                                   const uint8_t mappingQuality) const
-{
-    BamRecord result(*this);
-    result.Map(referenceId, refStart, strand, cigar, mappingQuality);
-    return result;
-}
+    /// \brief Try to flush any buffered data to file.
+    ///
+    /// \note The underlying implementation may not necessarily flush buffered
+    ///       data immediately, especially in a multithreaded writer situation.
+    ///       Let the writer go out of scope to fully ensure flushing.
+    ///
+    /// \throws std::runtime_error if flush fails
+    ///
+    virtual void TryFlush(void) =0;
+
+
+    /// \brief Write a record to the output %BAM file.
+    ///
+    /// \param[in] record BamRecord object
+    ///
+    /// \throws std::runtime_error on failure to write
+    ///
+    virtual void Write(const BamRecord& record) =0;
+
+    /// \brief Write a record to the output %BAM file.
+    ///
+    /// \param[in] recordImpl BamRecordImpl object
+    ///
+    /// \throws std::runtime_error on failure to write
+    ///
+    virtual void Write(const BamRecordImpl& recordImpl) =0;
+
+protected:
+    IRecordWriter(void);
+};
 
 } // namespace BAM
 } // namespace PacBio
+
+#endif // IRECORDWRITER_H

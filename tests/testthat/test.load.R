@@ -61,6 +61,37 @@ test_that("Start Frame Loads", {
   expect_equal(ind$sc[1], factor("LQRegion", levels = levels(ind$sc)))
 })
 
+# This will test that pluses are correctly removed from the alignment
+test_that("Pulses excluded", {
+  ibam = "goat.bam"
+  ind = loadPBI(ibam)
+  fastaname = "All4mers_circular_72x_l50256.fasta"
+  data = loadAlnsFromIndex(ind, fastaname)[[1]]
+  source("goat.values.R")
+  expect_equal(length(pm), nchar(fulseq))
+  readnogaps = data$read[data$read!="-"]
+  expect_equal(length(readnogaps)+1, nchar(seqb))# Plus 1 to the read as the soft-clipping
+  readAsStr <- paste(as.character(readnogaps), sep="", collapse="")
+  alnSeq <- substr(seqb, 0, nchar(seqb)-1)
+  expect_equal(readAsStr, alnSeq)
+  fulseqVec <- strsplit(fulseq, "")[[1]]
+  upperCaseVec <- grepl("[A-Z]",fulseqVec)
+  expect_equal(sum(upperCaseVec), nchar(seqb))
+  # Check pkmid value matches the sequence
+  selectedPkmid <- data$pkmid[data$read!="-"]
+  selectedPm <- pm[upperCaseVec]
+  selectedPm = head(selectedPm, length(selectedPm)-1)
+  # pbbam has "float" pkmid, and pbbamr uses "double", leaving a small
+  # difference. Here we just check this small difference.
+  pkmidDiff = abs(selectedPm/10 - selectedPkmid)
+  expect_false(any(pkmidDiff > 1e-4))
+  # Check sf value matches the sequence
+  selectedSf <- data$sf[data$read!="-"]
+  selectedBamsf <- sf[upperCaseVec]
+  selectedBamsf = head(selectedBamsf, length(selectedBamsf)-1)
+  expect_equal(selectedSf,selectedBamsf)
+})
+
 test_that("Unaligned Data Loads", {
   # Load an internal sample with name/read/ipd/pw/pkmid/sf
   ibam = system.file("extdata", "internalsample.bam", package="pbbamr")

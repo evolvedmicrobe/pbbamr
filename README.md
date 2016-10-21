@@ -33,7 +33,7 @@ libraries:
 
 * Boost (1.58)
 * HTSLIB (P4, 12/10/2015)
-* PBBAM (415cb1a1bcad853978ed37eda3fd4a23aed8e490)
+* PBBAM (a7401360a4aa202ddadc9fe542ec45602e7aff7e)
 
 Directly copying the files was done to enable a cleaner build, but none of the
 files were edited and can likely be recopied using the set of

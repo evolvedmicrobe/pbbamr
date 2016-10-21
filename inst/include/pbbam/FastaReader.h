@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2015, Pacific Biosciences of California, Inc.
+// Copyright (c) 2016, Pacific Biosciences of California, Inc.
 //
 // All rights reserved.
 //
@@ -34,53 +34,80 @@
 // SUCH DAMAGE.
 //
 // File Description
-/// \file BamRecord.inl
-/// \brief Inline implementations for the BamRecord class.
+/// \file FastaReader.h
+/// \brief Defines the FastaReader class.
 //
 // Author: Derek Barnett
 
-#include "pbbam/BamRecord.h"
+#ifndef FASTAREADER_H
+#define FASTAREADER_H
+
+#include "pbbam/FastaSequence.h"
+#include <memory>
+#include <vector>
 
 namespace PacBio {
 namespace BAM {
 
-inline BamRecord BamRecord::Clipped(const BamRecord& input,
-                                    const ClipType clipType,
-                                    const PacBio::BAM::Position start,
-                                    const PacBio::BAM::Position end)
-{
-    return input.Clipped(clipType, start, end);
-}
+namespace internal { struct FastaReaderPrivate; }
 
-inline BamRecord BamRecord::Clipped(const ClipType clipType,
-                                    const PacBio::BAM::Position start,
-                                    const PacBio::BAM::Position end) const
+///
+/// \brief The FastaReader provides sequential access to FASTA records.
+///
+class FastaReader
 {
-    BamRecord result(*this);
-    result.Clip(clipType, start, end);
-    return result;
-}
+public:
+    ///
+    /// \brief Reads all FASTA sequences from a file
+    ///
+    /// \param fn   FASTA filename
+    /// \return vector of FastaSequence results
+    ///
+    static std::vector<FastaSequence> ReadAll(const std::string& fn);
 
-inline BamRecord BamRecord::Mapped(const BamRecord& input,
-                                   const int32_t referenceId,
-                                   const Position refStart,
-                                   const Strand strand,
-                                   const Cigar& cigar,
-                                   const uint8_t mappingQuality)
-{
-    return input.Mapped(referenceId, refStart, strand, cigar, mappingQuality);
-}
+public:
+    /// \name Constructors & Related Methods
+    /// \{
 
-inline BamRecord BamRecord::Mapped(const int32_t referenceId,
-                                   const Position refStart,
-                                   const Strand strand,
-                                   const Cigar& cigar,
-                                   const uint8_t mappingQuality) const
-{
-    BamRecord result(*this);
-    result.Map(referenceId, refStart, strand, cigar, mappingQuality);
-    return result;
-}
+    explicit FastaReader(const std::string& fn);
+    FastaReader(FastaReader&& other);
+    FastaReader& operator=(FastaReader&& other);
+    ~FastaReader(void);
+
+    // copy is disabled
+    FastaReader(const FastaReader&) = delete;
+    FastaReader& operator=(const FastaReader&) = delete;
+
+    /// \}
+
+public:
+    /// \name Sequence Access
+    /// \{
+
+    ///
+    /// \brief GetNext
+    ///
+    /// \code{cpp}
+    ///
+    /// FastaReader reader{ fn };
+    /// FastaSequence f;
+    /// while (reader.GetNext(f)) {
+    ///     // do stuff with f
+    /// }
+    /// \endcode
+    ///
+    /// \param[out] record
+    /// \return success/failure
+    ///
+    bool GetNext(FastaSequence& record);
+
+    /// \}
+
+private:
+    std::unique_ptr<internal::FastaReaderPrivate> d_;
+};
 
 } // namespace BAM
 } // namespace PacBio
+
+#endif // FASTAREADER_H

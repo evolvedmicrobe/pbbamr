@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2015, Pacific Biosciences of California, Inc.
+// Copyright (c) 2016, Pacific Biosciences of California, Inc.
 //
 // All rights reserved.
 //
@@ -34,53 +34,70 @@
 // SUCH DAMAGE.
 //
 // File Description
-/// \file BamRecord.inl
-/// \brief Inline implementations for the BamRecord class.
+/// \file FastaSequence.h
+/// \brief Defines the FastaSequence class.
 //
 // Author: Derek Barnett
 
-#include "pbbam/BamRecord.h"
+#ifndef FASTASEQUENCE_H
+#define FASTASEQUENCE_H
+
+#include <string>
 
 namespace PacBio {
 namespace BAM {
 
-inline BamRecord BamRecord::Clipped(const BamRecord& input,
-                                    const ClipType clipType,
-                                    const PacBio::BAM::Position start,
-                                    const PacBio::BAM::Position end)
+///
+/// \brief The FastaSequence class represents a FASTA record (name & bases)
+///
+class FastaSequence
 {
-    return input.Clipped(clipType, start, end);
-}
+public:
+    /// \name Constructors & Related Methods
+    /// \{
 
-inline BamRecord BamRecord::Clipped(const ClipType clipType,
-                                    const PacBio::BAM::Position start,
-                                    const PacBio::BAM::Position end) const
-{
-    BamRecord result(*this);
-    result.Clip(clipType, start, end);
-    return result;
-}
+    ///
+    /// \brief FastaSequence
+    /// \param name
+    /// \param bases
+    ///
+    explicit FastaSequence(std::string name, std::string bases);
 
-inline BamRecord BamRecord::Mapped(const BamRecord& input,
-                                   const int32_t referenceId,
-                                   const Position refStart,
-                                   const Strand strand,
-                                   const Cigar& cigar,
-                                   const uint8_t mappingQuality)
-{
-    return input.Mapped(referenceId, refStart, strand, cigar, mappingQuality);
-}
+    FastaSequence(void) = default;
+    FastaSequence(const FastaSequence&) = default;
+    FastaSequence(FastaSequence&&) = default;
+    FastaSequence& operator=(const FastaSequence&) = default;
+    FastaSequence& operator=(FastaSequence&&) = default;
+    ~FastaSequence(void) = default;
 
-inline BamRecord BamRecord::Mapped(const int32_t referenceId,
-                                   const Position refStart,
-                                   const Strand strand,
-                                   const Cigar& cigar,
-                                   const uint8_t mappingQuality) const
-{
-    BamRecord result(*this);
-    result.Map(referenceId, refStart, strand, cigar, mappingQuality);
-    return result;
-}
+    /// \}
+
+public:
+    /// \name Attributes
+    /// \{
+
+    ///
+    /// \brief Name
+    /// \return
+    ///
+    std::string Name(void) const;
+
+    ///
+    /// \brief Bases
+    /// \return
+    ///
+    std::string Bases(void) const;
+
+    /// \}
+
+private:
+    std::string name_;
+    std::string bases_;
+};
 
 } // namespace BAM
 } // namespace PacBio
+
+#include "internal/FastaSequence.inl"
+
+#endif // FASTASEQUENCE_H
