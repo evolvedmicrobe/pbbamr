@@ -143,10 +143,9 @@ loadRegionsTable <- function(subreadsBamName) {
 #' which collects metrics on each read.  It returns a list of data frames, one
 #' for each metric analyzed.
 #'
-#' @param dataset The dataset/BAM file name.
+#' @param datasetname The dataset/BAM file name.
 #' @param indexedFastaName The fasta file used in the alignment.
 #' @export
-#' @examples
 getReadReport <- function(datasetname, indexedFastaName) {
     .Call('pbbamr_getReadReport', PACKAGE = 'pbbamr', datasetname, indexedFastaName)
 }
