@@ -7,9 +7,9 @@
 getReadReport(datasetname, indexedFastaName)
 }
 \arguments{
-\item{indexedFastaName}{The fasta file used in the alignment.}
+\item{datasetname}{The dataset/BAM file name.}
 
-\item{dataset}{The dataset/BAM file name.}
+\item{indexedFastaName}{The fasta file used in the alignment.}
 }
 \description{
 This function loads a dataset and parses each read, passing it to a class
