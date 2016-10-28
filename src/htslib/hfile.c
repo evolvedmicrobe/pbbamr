@@ -481,12 +481,14 @@ static hFILE *hopen_fd(const char *filename, const char *mode)
     off_t fileSize = lseek(fd, (size_t)0, SEEK_END);
     // Seek back to the begining of file
     lseek(fd, currentPos, SEEK_SET);
-
-    // For small files that are in rb mode,
+    size_t lenstr = strlen(filename);
+    // For small files that are not indexes and given rb mode,
     // we are just going to load them into memory to avoid
     // repeatedly fetching the same data from disk.
     if ((fileSize < (1 << 17)) &&
-        strcmp(mode, "rb") == 0) {
+        strcmp(mode, "rb") == 0 &&
+        lenstr > 4 &&
+        (strcmp(filename + lenstr - 4, ".pbi") != 0 && strcmp(filename + lenstr - 4, ".bai") != 0) ) {
         char* buffer = malloc(fileSize);
         ssize_t n = read(fd, buffer, fileSize);
         if (n < 0) goto error;
