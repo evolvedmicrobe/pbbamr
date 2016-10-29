@@ -3,7 +3,7 @@
 #' Helper function for verifying arguments
 #' @export
 chkClass <- function(var, classname, msg) {
-  if (!(classname %in% class(var))) {
+  if (charmatch(classname, class(var), 0) == 0) {
     stop(msg)
   }
 }
