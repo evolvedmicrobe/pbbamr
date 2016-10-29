@@ -854,6 +854,14 @@ int64_t bgzf_seek(BGZF* fp, int64_t pos, int where)
     }
     block_offset = pos & 0xFFFF;
     block_address = pos >> 16;
+
+    // hseek will flush and reload the buffers, so if we already already know the
+    // current address and can avoid a syscall to reload, let's just do that!
+    if(block_address == fp->block_address &&
+       block_offset == fp->block_offset) {
+      return 0;
+    }
+
     if (hseek(fp->fp, block_address, SEEK_SET) < 0) {
         fp->errcode |= BGZF_ERR_IO;
         return -1;
