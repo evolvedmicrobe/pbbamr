@@ -64,12 +64,9 @@ char getRandomBase() {
    vector with assigned levels.
 */
 IntegerVector createFactorFromSeqString(const std::string& seq) {
-  IntegerVector v(seq.length());
-  for(int i = 0; i < seq.length(); i++ ) {
-    v[i] = BPtoIndex(seq[i]);
-  }
+  IntegerVector v(seq.cbegin(), seq.cend(), BPtoIndex);
   v.attr("class") = "factor";
-  v.attr("levels") = CharacterVector::create("A", "C", "G", "T", "-", "N");
+  v.attr("levels") = BasePairs::GetBPsAtIndex();
   return v;
 }
 
@@ -618,6 +615,8 @@ List loadDataAtOffsets(CharacterVector offsets, std::string bamName, std::string
         }
 
         df.attr("class") = "data.frame";
+        // Spoofing .set_row_names which should be faster
+        //df.attr("row.names") = NumericVector::create(NA_INTEGER, -static_cast<double>(seq.size()));
         df.attr("row.names") = seq_len(seq.size());
         results[i] = df;
         continue;
