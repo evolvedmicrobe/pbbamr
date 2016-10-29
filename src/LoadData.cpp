@@ -942,6 +942,22 @@ List loadSingleZmwHMMfromBAM(CharacterVector offsets,
     reader.VirtualSeek(offset);
     BamRecord r;
     if (reader.GetNext(r)) {
+      double snrA, snrC, snrG, snrT;
+      if (r.HasSignalToNoise()) {
+        auto snrs = r.SignalToNoise();
+        snrA = snrs[0]; snrC = snrs[1];
+        snrG = snrs[2]; snrT = snrs[3];
+      } else{
+        auto na = NumericVector::get_na();
+        snrA = na; snrC = na;
+        snrG = na; snrT = na;
+      }
+      DataFrame df = DataFrame::create(
+        Named("snrA")  = snrA,
+        Named("snrC")  = snrC,
+        Named("snrG") = snrG,
+        Named("snrT")   = snrT);
+
         std::string read = r.Sequence(orientation, true, true);
         std::string ref = fasta.ReferenceSubsequence(r, orientation, true, true);
         auto breaks = _findBreakPoints(read, ref, windowBreakSize);
@@ -954,6 +970,7 @@ List loadSingleZmwHMMfromBAM(CharacterVector offsets,
             auto temp = _generatePairFromString(read, ref, breaks[i], breaks[i+1]);
             results[i] = temp;
           }
+          results.attr("SNR") = df;
           return results;
         }
     }
