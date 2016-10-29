@@ -585,22 +585,14 @@ List loadDataAtOffsets(CharacterVector offsets, std::string bamName, std::string
             auto ipds = r.IPD(Orientation::NATIVE, true, true).Data();
             if (seq.size() != ipds.size()) {
               Rcpp::stop("Sequence and IPD parts are of different size"); }
-            auto intarr = IntegerVector(ipds.size());
-            for(int i = 0; i < ipds.size(); i++) {
-              intarr[i] = ipds[i];
-            }
-            df["ipd"] = intarr;
+            df["ipd"] = ipds;
         }
 
         if (r.HasPulseWidth()) {
             auto pws = r.PulseWidth(Orientation::NATIVE, true, true).Data();
             if (seq.size() != pws.size()) {
               Rcpp::stop("Sequence and pulse width parts are of different size"); }
-            auto intarr = IntegerVector(pws.size());
-            for(int i = 0; i < pws.size(); i++) {
-              intarr[i] = pws[i];
-            }
-            df["pw"] = intarr;
+            df["pw"] = pws;
         }
 
         if (r.HasSignalToNoise()) {
