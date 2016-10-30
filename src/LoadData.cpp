@@ -351,7 +351,11 @@ DataFrame loadPBI(std::string filename,
                             Named("qual") = basicData.readQual_,
                             Named("offset") = offsets,
                             // Convert to int to avoid having it become a "Raw" vector
-                            Named("flag") =  std::vector<int>(basicData.ctxtFlag_.begin(), basicData.ctxtFlag_.end() ));
+                            Named("flag") =  IntegerVector(basicData.ctxtFlag_.begin(),
+                                                           basicData.ctxtFlag_.end(),
+                                                           [](const uint8_t f){return static_cast<int>(f);}
+
+                                  ));
   // Add Mapping Data
   if (raw.HasMappedData()) {
     auto mappedData = raw.MappedData();
@@ -374,7 +378,8 @@ DataFrame loadPBI(std::string filename,
     df["matches"] = mappedData.nM_;
     df["mismatches"] = mappedData.nMM_;
     // Convert to int to avoid raw vector assignment.
-    df["mq"] = std::vector<int>(mappedData.mapQV_.begin(), mappedData.mapQV_.end());
+    df["mq"] = IntegerVector(mappedData.mapQV_.begin(), mappedData.mapQV_.end(),
+                           [](const uint8_t f){return static_cast<int>(f);});
     // Now get number of insertions and deletions
     auto insertions = IntegerVector(raw.NumReads());
     auto deletions = IntegerVector(raw.NumReads());
