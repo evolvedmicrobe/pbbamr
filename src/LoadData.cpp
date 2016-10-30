@@ -521,11 +521,11 @@ DataFrame loadPBI(std::string filename,
   // in the construction of each vector above.
   // Note: At some point transition to an Rcpp subset function defined here:
   // http://kevinushey.github.io/blog/2015/01/24/understanding-data-frame-subsetting/
-  auto row_count = raw.NumReads();
+  auto org_row_count = raw.NumReads();
+  auto row_count = 0;
   if(has_suffix(filename, ".xml")) {
     LogicalVector filter = LogicalVector(raw.NumReads());
     const PbiFilter pbifilter = PbiFilter::FromDataSet(ds);
-    row_count = 0;
     for (size_t i = 0; i < raw.NumReads(); ++i) {
       if (pbifilter.Accepts(raw, i)) {
             // use this record row
@@ -533,11 +533,14 @@ DataFrame loadPBI(std::string filename,
         row_count++;
       }
     }
-    auto dfw = wrap(df);
-    auto filterw = wrap(filter);
-
-    df = subsetinR(dfw, filterw, R_MissingArg);
-  }
+    // Only subset if we are altering the size, otherwise avoid the expense.
+    if(row_count != org_row_count) {
+      auto dfw = wrap(df);
+      auto filterw = wrap(filter);
+      // This is VERY expensive and involves a lot of GC stuff.
+      df = subsetinR(dfw, filterw, R_MissingArg);
+    }
+  } else {row_count = org_row_count;}
   df.attr("row.names") = seq_len(row_count);
   df.attr("bam.file") = filename;
   return df;
