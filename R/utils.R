@@ -112,11 +112,15 @@ loadAlnsFromIndex <- function(index, indexed_fasta_name, rows = NULL ) {
     stop("Index was expected to have a file and offset column.")
   }
 
-  if (!is.null(rows)) {
-    index = index[rows,]
-  }
+  # DO NOT SUBSET THE DATA.FRAME
+  # R data.frames must have a row.names attribute, and under certain encodings
+  # R will generate a new seq(1, nrow(df)) integer vector whenever this attribute
+  # is asked for (see the `SEXP getAttrib(SEXP vec, SEXP name)` function)
+  # For large data.frames this triggers an Allocation/GC/Fill routine that destroys
+  # performance, so we avoid it by not subsetting the data.frame directly
+  rng = if (is.null(rows)) 1:nrow(index) else rows
 
-  lapply(1:nrow(index), function(i) {
+  lapply(rng, function(i) {
     bam_name = as.character(index$file[i])
     loadDataAtOffsets(index$offset[i], bamName = bam_name, indexedFastaName = indexed_fasta_name)[[1]]
   })
