@@ -158,11 +158,9 @@ loadReadsFromIndex <- function(index, rows = NULL ) {
     stop("Index was expected to have a file and offset column.")
   }
 
-  if (!is.null(rows)) {
-    index = index[rows,]
-  }
+  rng = if (is.null(rows)) 1:nrow(index) else rows
 
-  lapply(1:nrow(index), function(i) {
+  lapply(rng, function(i) {
     bam_name = as.character(index$file[i])
     loadSubreadsAtOffsets(index$offset[i], bamName = bam_name)[[1]]
   })
