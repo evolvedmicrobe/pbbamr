@@ -33,7 +33,8 @@ ZLIB_DIR      ?= $(ZLIB_ROOT)/lib
 
 CPPFLAGS = -I. -I$(ZLIB_INC)
 # TODO: probably update cram code to make it compile cleanly with -Wc++-compat
-CFLAGS   = -Wall -O2 -Wno-unused-function -fPIC
+CFLAGS   = -Wall -O2 -Wno-unused-function -fPIC -g
+#CFLAGS   = -Wall -O0 -Wno-unused-function -fPIC -g
 EXTRA_CFLAGS_PIC = -fpic
 LDFLAGS  =
 LDLIBS   = -L$(ZLIB_DIR)  -lz -lm
@@ -78,7 +79,7 @@ BUILT_PROGRAMS = \
 	tabix
 
 
-all: lib-static lib-shared $(BUILT_PROGRAMS) 
+all: lib-static lib-shared $(BUILT_PROGRAMS)
 
 HTSPREFIX =
 include htslib_vars.mk
@@ -216,7 +217,7 @@ libhts.dylib: $(LIBHTS_OBJS)
 
 # Windows build under MinGW
 # http://stackoverflow.com/questions/5674613/compiling-a-dynamically-linked-library
-# -shared -Wl,--out-implib,libfile.a -o file.dll file.o 
+# -shared -Wl,--out-implib,libfile.a -o file.dll file.o
 libhts.dll: $(LIBHTS_OBJS)
 	$(CC) -shared -Wl,--out-implib,libhts.dll.a -pthread $(LDFLAGS) -o $@ $(LIBHTS_OBJS) $(LDLIBS)
 
