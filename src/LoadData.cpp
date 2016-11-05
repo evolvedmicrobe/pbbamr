@@ -711,6 +711,14 @@ List loadSubreadsAtOffsets(CharacterVector offsets, std::string bamName) {
           fseq["sf"] = tmp;
         }
 
+        if (r.HasSignalToNoise()) {
+          auto snrs = r.SignalToNoise();
+          fseq["snrA"] = rep(snrs[0], seq.size());
+          fseq["snrC"] = rep(snrs[1], seq.size());
+          fseq["snrG"] = rep(snrs[2], seq.size());
+          fseq["snrT"] = rep(snrs[3], seq.size());
+        }
+
         fseq.attr("class") = "data.frame";
         fseq.attr("row.names") = seq_len(seq.size());
         results[i] = fseq;

@@ -97,6 +97,8 @@ test_that("Unaligned Data Loads", {
   ibam = system.file("extdata", "internalsample.bam", package="pbbamr")
   ind = loadPBI(ibam)
   data = loadReadsFromIndex(ind, 1:10)
+  nms = colnames(data[[1]])
+  expect_equal(nms, c("name", "read", "ipd", "pw", "pkmid", "sf", "snrA", "snrC", "snrG", "snrT" ))
 })
 
 
