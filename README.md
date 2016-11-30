@@ -17,14 +17,6 @@ simply run the following command before those given above:
 
     httr::set_config( httr::config( ssl_verifypeer = 0L ) )
 
-To install locally (if you don't have write access to the R folder), do something like this:
-
-```
-install.packages("devtools")
-library(devtools)
-with_libpaths(new = "/home/UNIXHOME/mlakata/R/x86_64-redhat-linux-gnu-library/3.2", install_github("PacificBiosciences/pbbamr", build_vignettes = FALSE))
-```
-
 ## Documentation
 
 [The online vignette](http://htmlpreview.github.io/?http://github.com/PacificBiosciences/pbbamr/blob/master/vignettes/pbbamr.html)
