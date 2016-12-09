@@ -168,13 +168,15 @@ public:
     for (; cigarIter != cigarEnd; ++cigarIter) {
       const auto op = (*cigarIter);
       const auto type = op.Type();
-      if (type == CigarOperationType::HARD_CLIP ||
-          type == CigarOperationType::SOFT_CLIP ||
-          type == CigarOperationType::PADDING ||
-          type == CigarOperationType::REFERENCE_SKIP ||
-          type == CigarOperationType::UNKNOWN_OP) {
+      if (type == CigarOperationType::SOFT_CLIP) {
         clippedBases += op.Length();
-      } else {
+      } else if (type == CigarOperationType::HARD_CLIP ||
+                 type == CigarOperationType::PADDING ||
+                 type == CigarOperationType::REFERENCE_SKIP ||
+                 type == CigarOperationType::UNKNOWN_OP) {
+        continue;
+      }
+        else {
         unclippedBases += op.Length();
       }
     }
