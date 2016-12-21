@@ -784,8 +784,9 @@ List loadHMMfromBAM(CharacterVector offsets,
       return NULL;
     }
 
-    IndexedFastaReader fasta(indexedFastaName);
-    BamReader reader(bamName);
+    IndexedFastaReader& fasta = *CachedFastaReader.GetReader(indexedFastaName);
+    BamReader& reader = *CachedBamReader.GetReader(bamName);
+
 
     // Always get reads in native orientation.
     auto orientation = Orientation::NATIVE;
@@ -934,8 +935,9 @@ List loadSingleZmwHMMfromBAM(CharacterVector offsets,
       return NULL;
     }
 
-    IndexedFastaReader fasta(indexedFastaName);
-    BamReader reader(bamName);
+    IndexedFastaReader& fasta = *CachedFastaReader.GetReader(indexedFastaName);
+    BamReader& reader = *CachedBamReader.GetReader(bamName);
+
 
     // Always get reads in native orientation.
     auto orientation = Orientation::NATIVE;
