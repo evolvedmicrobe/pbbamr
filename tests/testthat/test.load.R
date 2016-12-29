@@ -32,6 +32,13 @@ test_that("loadFromDataFrame", {
   expect_equal(length(aln), 3)
 })
 
+test_that("loadRefName", {
+  d = loadPBI(bfile)
+  expect_equal(as.character(d$ref[1]), "lambda_NEB3011")
+  b = loadPBI(bamdset)
+  expect_equal(as.character(b$ref[1]), "ecoliK12_pbi_March2013")
+})
+
 test_that("snrLoads", {
   d = loadPBI(bamdset, loadSNR = TRUE, loadRQ = TRUE)
   expect_equal(abs(4.73512 - d$snrA[1]) < 1e-5, TRUE)
