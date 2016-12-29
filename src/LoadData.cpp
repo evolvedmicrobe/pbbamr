@@ -28,6 +28,14 @@ bool FileExists(const std::string& path)
   return ifile.good();
 }
 
+// Utility function for String.EndsWith
+bool has_suffix(const std::string &str, const std::string &suffix)
+{
+  return str.size() >= suffix.size() &&
+    str.compare(str.size() - suffix.size(), suffix.size(), suffix) == 0;
+}
+
+
 // Some globals
 template<typename T>
 class CachedReader {
@@ -39,6 +47,8 @@ public:
     if (!reader || (fName != cached_name)) {
       if(!FileExists(fName)) {
         stop("File does not exist or is not readable.");
+      } else if (has_suffix(fName, ".xml")) {
+        stop("File should be the actual file and not an XML dataset.");
       }
       reader.reset(new T(fName));
       cached_name = fName;
@@ -271,12 +281,6 @@ List loadHeader(std::string filename) {
   return df;
 }
 
-// Utility function for String.EndsWith
-bool has_suffix(const std::string &str, const std::string &suffix)
-{
-  return str.size() >= suffix.size() &&
-    str.compare(str.size() - suffix.size(), suffix.size(), suffix) == 0;
-}
 
 // Get a mechanism to subset data frames in R using the R side function.
 // See: http://stackoverflow.com/questions/22828361/rcpp-function-to-select-and-to-return-a-sub-dataframe
@@ -784,8 +788,9 @@ List loadHMMfromBAM(CharacterVector offsets,
       return NULL;
     }
 
-    IndexedFastaReader fasta(indexedFastaName);
-    BamReader reader(bamName);
+    IndexedFastaReader& fasta = *CachedFastaReader.GetReader(indexedFastaName);
+    BamReader& reader = *CachedBamReader.GetReader(bamName);
+
 
     // Always get reads in native orientation.
     auto orientation = Orientation::NATIVE;
@@ -934,8 +939,9 @@ List loadSingleZmwHMMfromBAM(CharacterVector offsets,
       return NULL;
     }
 
-    IndexedFastaReader fasta(indexedFastaName);
-    BamReader reader(bamName);
+    IndexedFastaReader& fasta = *CachedFastaReader.GetReader(indexedFastaName);
+    BamReader& reader = *CachedBamReader.GetReader(bamName);
+
 
     // Always get reads in native orientation.
     auto orientation = Orientation::NATIVE;
