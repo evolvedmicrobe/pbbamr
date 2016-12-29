@@ -361,14 +361,15 @@ DataFrame loadPBI(std::string filename,
     auto mappedData = raw.MappedData();
     IntegerVector mappedtId(wrap(mappedData.tId_));
     mappedtId = mappedtId + 1;
-    try {
-      BamReader br(filename);
+    for(auto fn : fileNames) {
+      BamReader br(fn.Filename());
       auto head = br.Header();
       if (head.Sequences().size() > 0) {
         mappedtId.attr("class") = "factor";
         mappedtId.attr("levels") = wrap(head.SequenceNames());
       }
-    }catch(...) {}
+    }
+
     df["ref"] = mappedtId;
     df["tstart"] = IntegerVector(mappedData.tStart_.begin(), mappedData.tStart_.end());
     df["tend"] = IntegerVector(mappedData.tEnd_.begin(), mappedData.tEnd_.end());
