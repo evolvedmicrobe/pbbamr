@@ -362,17 +362,29 @@ DataFrame loadPBI(std::string filename,
                                   ));
   // Add Mapping Data
   if (raw.HasMappedData()) {
+    auto rn = fileNames.front();
+    BamReader brn(rn.Filename());
+    auto rhead = brn.Header();
     auto mappedData = raw.MappedData();
     IntegerVector mappedtId(wrap(mappedData.tId_));
     mappedtId = mappedtId + 1;
-    try {
-      BamReader br(filename);
+    auto rName = rhead.SequenceNames();
+    if (rhead.Sequences().size() > 0) {
+      mappedtId.attr("class") = "factor";
+      mappedtId.attr("levels") = wrap(rName);
+    }
+    for (auto fn:fileNames) {
+      BamReader br(fn.Filename());
       auto head = br.Header();
-      if (head.Sequences().size() > 0) {
-        mappedtId.attr("class") = "factor";
-        mappedtId.attr("levels") = wrap(head.SequenceNames());
+      if (head.Sequences().size() != rName.size()) {
+        stop("BAM files do not have same number of references!");
+      } else {
+        auto sName = head.SequenceNames();
+        if (!std::equal(rName.begin(), rName.end(), sName.begin())) {
+          stop("BAM files have different reference names!");
+        }
       }
-    }catch(...) {}
+    }
     df["ref"] = mappedtId;
     df["tstart"] = IntegerVector(mappedData.tStart_.begin(), mappedData.tStart_.end());
     df["tend"] = IntegerVector(mappedData.tEnd_.begin(), mappedData.tEnd_.end());
