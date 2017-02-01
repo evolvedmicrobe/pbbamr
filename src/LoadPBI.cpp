@@ -176,7 +176,6 @@ public:
 //' This function returns a dataframe with same nrow dimension as df but augmented with extra columns.
 //'
 //' @param df the result of a call to loadPBI, or a subset of the rows of such a result
-//' @param filename the dataset filename
 //' @param loadSNR Should we load the four channel SNR data? (Default = FALSE)
 //' @param loadNumPasses Should we load the number of passes data? (Default = FALSE)
 //' @param loadRQ Should we load the read quality? (Default = FALSE)
@@ -184,16 +183,19 @@ public:
 //' @export
 // [[Rcpp::export]]
 DataFrame loadExtras(DataFrame& df,
-                     const std::string& filename,
                      bool loadSNR = false,
                      bool loadNumPasses = false,
                      bool loadRQ = false,
                      bool loadSC = false)
 {
-    if (loadSC & !has_suffix(filename, ".scraps.bam")) {
-        Rcpp::stop("Can only set loadSC = TRUE if the filename passed ends with .scraps.bam");
-    }
-    DataSet ds(filename);
+    // if (loadSC & !has_suffix(filename, ".scraps.bam")) {
+    //     Rcpp::stop("Can only set loadSC = TRUE if the filename passed ends with .scraps.bam");
+    // }
+
+    Environment base("package:base");
+    Function levels = wrap(base["levels"]);
+    CharacterVector fileNames = levels(df["file"]);
+
     size_t nrows = df.nrows();
 
     // Later we should use a separate df for output
@@ -224,12 +226,11 @@ DataFrame loadExtras(DataFrame& df,
         extras["sc"] = sc;
     }
 
-
-    // Prepare a BAM reader for each bam file in the dset; we will
-    // then seek within each BAM reader to get the records we need.
+    // Prepare a BAM reader for each bam file referenced; we will then
+    // seek within each BAM reader to get the records we need.
     std::vector<std::unique_ptr<BamReader>> readers;
-    for (auto bf : ds.BamFiles()) {
-        readers.emplace_back(new BamReader(bf));
+    for (auto bf : fileNames) {
+        readers.emplace_back(new BamReader(as<std::string>(bf)));
     }
 
     CharacterVector offsetsAsString = df["offset"];

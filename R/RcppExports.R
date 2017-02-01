@@ -145,14 +145,13 @@ loadRegionsTable <- function(subreadsBamName) {
 #' This function returns a dataframe with same nrow dimension as df but augmented with extra columns.
 #'
 #' @param df the result of a call to loadPBI, or a subset of the rows of such a result
-#' @param filename the dataset filename
 #' @param loadSNR Should we load the four channel SNR data? (Default = FALSE)
 #' @param loadNumPasses Should we load the number of passes data? (Default = FALSE)
 #' @param loadRQ Should we load the read quality? (Default = FALSE)
 #' @param loadSC Load the SC tag for a scraps.bam file? (Only possible if file ends with '.scraps.bam')
 #' @export
-loadExtras <- function(df, filename, loadSNR = FALSE, loadNumPasses = FALSE, loadRQ = FALSE, loadSC = FALSE) {
-    .Call('pbbamr_loadExtras', PACKAGE = 'pbbamr', df, filename, loadSNR, loadNumPasses, loadRQ, loadSC)
+loadExtras <- function(df, loadSNR = FALSE, loadNumPasses = FALSE, loadRQ = FALSE, loadSC = FALSE) {
+    .Call('pbbamr_loadExtras', PACKAGE = 'pbbamr', df, loadSNR, loadNumPasses, loadRQ, loadSC)
 }
 
 #' Load PBI BAM index file

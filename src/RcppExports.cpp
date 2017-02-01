@@ -133,18 +133,17 @@ BEGIN_RCPP
 END_RCPP
 }
 // loadExtras
-DataFrame loadExtras(DataFrame& df, const std::string& filename, bool loadSNR, bool loadNumPasses, bool loadRQ, bool loadSC);
-RcppExport SEXP pbbamr_loadExtras(SEXP dfSEXP, SEXP filenameSEXP, SEXP loadSNRSEXP, SEXP loadNumPassesSEXP, SEXP loadRQSEXP, SEXP loadSCSEXP) {
+DataFrame loadExtras(DataFrame& df, bool loadSNR, bool loadNumPasses, bool loadRQ, bool loadSC);
+RcppExport SEXP pbbamr_loadExtras(SEXP dfSEXP, SEXP loadSNRSEXP, SEXP loadNumPassesSEXP, SEXP loadRQSEXP, SEXP loadSCSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< DataFrame& >::type df(dfSEXP);
-    Rcpp::traits::input_parameter< const std::string& >::type filename(filenameSEXP);
     Rcpp::traits::input_parameter< bool >::type loadSNR(loadSNRSEXP);
     Rcpp::traits::input_parameter< bool >::type loadNumPasses(loadNumPassesSEXP);
     Rcpp::traits::input_parameter< bool >::type loadRQ(loadRQSEXP);
     Rcpp::traits::input_parameter< bool >::type loadSC(loadSCSEXP);
-    rcpp_result_gen = Rcpp::wrap(loadExtras(df, filename, loadSNR, loadNumPasses, loadRQ, loadSC));
+    rcpp_result_gen = Rcpp::wrap(loadExtras(df, loadSNR, loadNumPasses, loadRQ, loadSC));
     return rcpp_result_gen;
 END_RCPP
 }
