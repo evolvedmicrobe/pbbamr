@@ -126,13 +126,15 @@ loadAlnsFromIndex <- function(index, indexed_fasta_name, rows = NULL ) {
   })
 }
 
-#' Get the full path to a movie from a referenceset.xml file
-#' and append the current path to it if it is a local reference.
-#'
-#' @param  p A referenceset XML file.
+#' Get the full path to a reference FASTA from a dataset file.  For
+#' XML reference sets, this is determined by the FASTA file referenced in
+#' the XML; for FASTA reference sets, it is just the FASTA file itself.
+##'
+#' @param  p A referenceset XML file or reference FASTA
 #' @export
 getReferencePath <- function(p) {
   p = normalizePath(p)
+  if (endsWith(p, ".fasta")) { return(p) }
   dp = pbbamr::getFastaFileNameFromDatasetFile(p)
   split_path <- function(x) if (dirname(x) == x) x else c(basename(x),split_path(dirname(x)))
   ap = rev(split_path(dp))
