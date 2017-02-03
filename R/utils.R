@@ -134,7 +134,7 @@ loadAlnsFromIndex <- function(index, indexed_fasta_name, rows = NULL ) {
 #' @export
 getReferencePath <- function(p) {
   p = normalizePath(p)
-  if (endsWith(p, ".fasta")) { return(p) }
+  if (grepl(".fasta$", p)) { return(p) }
   dp = pbbamr::getFastaFileNameFromDatasetFile(p)
   split_path <- function(x) if (dirname(x) == x) x else c(basename(x),split_path(dirname(x)))
   ap = rev(split_path(dp))
