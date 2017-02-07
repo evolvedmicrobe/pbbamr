@@ -1,4 +1,5 @@
 library(pbbamr)
+library(dplyr)
 #bfile = "/Users/nigel/git/pbbamr/tests/testthat//test.aligned.bam"
 #ffile = "/Users/nigel/git/pbbamr/tests/testthat/lambdaNEB.fa"
 #ofile = "/Users/nigel/git/pbbamr/tests/testthat/loadedAln.Rd"
@@ -136,4 +137,19 @@ test_that("IndexLoadAsInteger", {
   for (i in index) {
     expect_equal(class(d[,i]), "integer")
   }
+})
+
+
+test_that("loadPBI2 & loadExtras work as loadPBI did", {
+
+    df <- (loadPBI("AlignmentSet/m54006_160504_020705.alignmentset.xml",
+                  loadSNR=T, loadRQ=T, loadNumPasses=T)
+           %>% select(-starts_with("bc")))
+    attr(df, "bam.file") <- NULL
+
+    df2 <- loadPBI2("AlignmentSet/m54006_160504_020705.alignmentset.xml")
+    ex <- loadExtras(df2, loadSNR=T, loadRQ=T, loadNumPasses=T)
+    df2 <- cbind(df2, ex)
+
+    expect_equal(df, df2)
 })
