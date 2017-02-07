@@ -173,7 +173,8 @@ public:
 //' about a significantly reduced subset of the entire BAM file
 //' contents.
 //'
-//' This function returns a dataframe with same nrow dimension as df but augmented with extra columns.
+//' This function returns a dataframe with same nrow dimension as df, with columns containing the
+//' requested data fields.
 //'
 //' @param df the result of a call to loadPBI, or a subset of the rows of such a result
 //' @param loadSNR Should we load the four channel SNR data? (Default = FALSE)
@@ -197,9 +198,7 @@ DataFrame loadExtras(DataFrame& df,
     CharacterVector fileNames = levels(df["file"]);
 
     size_t nrows = df.nrows();
-
-    // Later we should use a separate df for output
-    DataFrame& extras = df;
+    DataFrame extras;
 
     NumericVector snrA, snrC, snrG, snrT, np, rq;
     IntegerVector sc;
@@ -322,6 +321,8 @@ DataFrame loadExtras(DataFrame& df,
         }
     }
 
+    extras.attr("class") = "data.frame";
+    extras.attr("row.names") = seq_len(nrows);
     return extras;
 }
 
