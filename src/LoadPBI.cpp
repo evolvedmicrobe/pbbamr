@@ -117,7 +117,7 @@ public:
             Named("qstart") = basicData.qStart_,
             Named("qend")   = basicData.qEnd_,
             Named("qual")   = basicData.readQual_,
-            Named("offset") = offsetsAsString,
+            Named("offset") = CharacterVector(offsetsAsString.begin(), offsetsAsString.end()),
             Named("flag")   = flag);
 
 
@@ -414,5 +414,6 @@ DataFrame loadPBI2(std::string filename)
     }
 
     DataFrame df =  fi.ToDataFrame(bamFilenames, seqNames);
+    df.attr("bam.file") = filename;
     return df;
 }
