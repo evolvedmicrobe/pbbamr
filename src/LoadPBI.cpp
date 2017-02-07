@@ -189,16 +189,21 @@ DataFrame loadExtras(DataFrame& df,
                      bool loadRQ = false,
                      bool loadSC = false)
 {
-    // if (loadSC & !has_suffix(filename, ".scraps.bam")) {
-    //     Rcpp::stop("Can only set loadSC = TRUE if the filename passed ends with .scraps.bam");
-    // }
-
     Environment base("package:base");
     Function levels = wrap(base["levels"]);
     CharacterVector fileNames = levels(df["file"]);
-
     size_t nrows = df.nrows();
     DataFrame extras;
+
+
+    if (loadSC) {
+        for (const auto& fn: fileNames) {
+            if (!has_suffix(std::string(fn), ".scraps.bam"))
+            {
+                Rcpp::stop("Can only set loadSC = TRUE if the filename passed ends with .scraps.bam");
+            }
+        }
+    }
 
     NumericVector snrA, snrC, snrG, snrT, np, rq;
     IntegerVector sc;
