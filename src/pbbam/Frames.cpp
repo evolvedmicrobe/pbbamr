@@ -43,6 +43,8 @@
 #include <algorithm>
 #include <cassert>
 #include <cmath>
+#include <cstdint>
+
 using namespace PacBio;
 using namespace PacBio::BAM;
 using namespace std;

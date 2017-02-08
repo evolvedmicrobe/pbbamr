@@ -137,6 +137,37 @@ loadRegionsTable <- function(subreadsBamName) {
     .Call('pbbamr_loadRegionsTable', PACKAGE = 'pbbamr', subreadsBamName)
 }
 
+#' Load some extra data values that are not in the pbi file, only in
+#' the BAM.  This method is intended to be used to fetch information
+#' about a significantly reduced subset of the entire BAM file
+#' contents.
+#'
+#' This function returns a dataframe with same nrow dimension as df but augmented with extra columns.
+#'
+#' @param df the result of a call to loadPBI, or a subset of the rows of such a result
+#' @param loadSNR Should we load the four channel SNR data? (Default = FALSE)
+#' @param loadNumPasses Should we load the number of passes data? (Default = FALSE)
+#' @param loadRQ Should we load the read quality? (Default = FALSE)
+#' @param loadSC Load the SC tag for a scraps.bam file? (Only possible if file ends with '.scraps.bam')
+#' @export
+loadExtras <- function(df, loadSNR = FALSE, loadNumPasses = FALSE, loadRQ = FALSE, loadSC = FALSE) {
+    .Call('pbbamr_loadExtras', PACKAGE = 'pbbamr', df, loadSNR, loadNumPasses, loadRQ, loadSC)
+}
+
+#' Load PBI BAM index file
+#'
+#' This function loads a pbi index file into a dataframe.  Depending on the
+#' number of attributes present, it will either load just the basic data, or optionally
+#' the mapping and barcode data.
+#'
+#' Input can be a BAM filename, or an XML dataset file---not a
+#' FOFN.
+#'
+#' @export
+loadPBI2 <- function(filename) {
+    .Call('pbbamr_loadPBI2', PACKAGE = 'pbbamr', filename)
+}
+
 #' Get Per Read Metrics
 #'
 #' This function loads a dataset and parses each read, passing it to a class

@@ -17,6 +17,8 @@ namespace BasePairs {
 
 bool FileExists(const std::string& path);
 
+bool has_suffix(const std::string &str, const std::string &suffix);
+
 inline size_t BPtoIndex(char bp) {
   switch (bp) {
   case 'A':
