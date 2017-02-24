@@ -596,7 +596,11 @@ List loadDataAtOffsets(CharacterVector offsets, std::string bamName, std::string
       if (reader->GetNext(r)) {
 
         std::string seq = r.Sequence(orientation, true, true);
+        for(auto& x: seq)
+          x = toupper(x);
         std::string ref = fasta->ReferenceSubsequence(r, orientation, true, true);
+        for(auto& x: ref)
+          x = toupper(x);
         if (seq.size() != ref.size())
           Rcpp::stop("Sequence and reference parts are of different size");
         // make this a list
@@ -822,7 +826,11 @@ List loadHMMfromBAM(CharacterVector offsets,
       if (reader.GetNext(r)) {
 
         std::string read = r.Sequence(orientation, true, true);
+        for(auto& x: read)
+          x = toupper(x);
         std::string ref = fasta.ReferenceSubsequence(r, orientation, true, true);
+        for(auto& x: ref)
+          x = toupper(x);
         // These should match and the first two and last two positions of the
         // alignment (no gaps at start or end).
         auto trimmed = _sampleAndTrimSeqs(read, ref, trimToLength);
