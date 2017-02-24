@@ -1,5 +1,6 @@
 #include <fstream>
 #include <Rcpp.h>
+#include <cctype>
 
 #include <boost/algorithm/string.hpp>
 
@@ -984,7 +985,11 @@ List loadSingleZmwHMMfromBAM(CharacterVector offsets,
         Named("snrT")   = snrT);
 
         std::string read = r.Sequence(orientation, true, true);
+        for(auto& x: read)
+          x = toupper(x); // in case the read sequence is not capitalized
         std::string ref = fasta.ReferenceSubsequence(r, orientation, true, true);
+        for(auto& x: ref)
+          x = toupper(x); //capitalize the reference sequence to make sure it matches the read sequence
         auto breaks = _findBreakPoints(read, ref, windowBreakSize);
         if (breaks.size() ==0) {
           Rcpp::stop("Could not find any break points in read pair.");
