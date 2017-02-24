@@ -63,7 +63,10 @@ static CachedReader<IndexedFastaReader> CachedFastaReader;
 
 
 
-
+void capitalize(std::string& s) {
+  for(auto& x: s)
+    x = toupper(x);
+}
 
 char getRandomBase() {
   char bases[] = {'A', 'C', 'G', 'T'};
@@ -596,11 +599,9 @@ List loadDataAtOffsets(CharacterVector offsets, std::string bamName, std::string
       if (reader->GetNext(r)) {
 
         std::string seq = r.Sequence(orientation, true, true);
-        for(auto& x: seq)
-          x = toupper(x);
+        capitalize(seq);
         std::string ref = fasta->ReferenceSubsequence(r, orientation, true, true);
-        for(auto& x: ref)
-          x = toupper(x);
+        capitalize(ref);
         if (seq.size() != ref.size())
           Rcpp::stop("Sequence and reference parts are of different size");
         // make this a list
@@ -826,11 +827,9 @@ List loadHMMfromBAM(CharacterVector offsets,
       if (reader.GetNext(r)) {
 
         std::string read = r.Sequence(orientation, true, true);
-        for(auto& x: read)
-          x = toupper(x);
+        capitalize(read);
         std::string ref = fasta.ReferenceSubsequence(r, orientation, true, true);
-        for(auto& x: ref)
-          x = toupper(x);
+        capitalize(ref);
         // These should match and the first two and last two positions of the
         // alignment (no gaps at start or end).
         auto trimmed = _sampleAndTrimSeqs(read, ref, trimToLength);
@@ -993,11 +992,9 @@ List loadSingleZmwHMMfromBAM(CharacterVector offsets,
         Named("snrT")   = snrT);
 
         std::string read = r.Sequence(orientation, true, true);
-        for(auto& x: read)
-          x = toupper(x); // in case the read sequence is not capitalized
+        capitalize(read); // in case the read sequence is not capitalized
         std::string ref = fasta.ReferenceSubsequence(r, orientation, true, true);
-        for(auto& x: ref)
-          x = toupper(x); //capitalize the reference sequence to make sure it matches the read sequence
+        capitalize(ref); //capitalize the reference sequence to make sure it matches the read sequence
         auto breaks = _findBreakPoints(read, ref, windowBreakSize);
         if (breaks.size() ==0) {
           Rcpp::stop("Could not find any break points in read pair.");
