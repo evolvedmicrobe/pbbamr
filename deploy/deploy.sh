@@ -14,6 +14,11 @@
 
 dist=$1
 
+source /mnt/software/Modules/current/init/bash
+module use /mnt/software/modulefiles
+module purge
+module load R/3.2.2-internal
+
 case $dist in
     centos7)
         export R_LIBS=/pbi/dept/secondary/builds/R/current/lib/R/library/centos7
@@ -30,7 +35,8 @@ case $dist in
 esac
 
 # Remove any object files
-../clean.sh
+find . -name "*.o" -o -name "*.so"  -o -name "*.a" | xargs rm
+
 
 # Install pbbamr
 R CMD INSTALL .
