@@ -17,7 +17,7 @@ dist=$1
 source /mnt/software/Modules/current/init/bash
 module use /mnt/software/modulefiles
 module purge
-module load R/3.2.2-internal
+module load R/3.2.3-internal
 
 case $dist in
     centos7)
@@ -35,7 +35,7 @@ case $dist in
 esac
 
 # Remove any object files
-find . -name "*.o" -o -name "*.so"  -o -name "*.a" | xargs rm
+find . -name "*.o" -o -name "*.so"  -o -name "*.a" | xargs rm -f
 
 
 # Install pbbamr
