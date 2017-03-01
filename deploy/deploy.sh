@@ -29,4 +29,8 @@ case $dist in
         ;;
 esac
 
+# Remove any object files
+../clean.sh
+
+# Install pbbamr
 R CMD INSTALL .
