@@ -37,7 +37,12 @@ combineConditions <- function(dfs, cond_names = names(dfs)) {
   chkClass(dfs, "list", "Data frames must be a list")
   ncols = sapply(dfs, ncol)
   if (length(unique(ncols)) != 1) {
-    stop("All data frames must have the same number of columns.")
+    allcolnames = unique(unlist(sapply(dfs, colnames)))
+    for (i in 1:length(dfs)) {
+      Missing <- setdiff(allcolnames, names(dfs[[i]]))  # Find names of missing columns
+      dfs[[i]][Missing] <- NA  # Add them, filled with 'NA's
+      dfs
+    }
   }
   if (any(colnames(dfs[[1]]) == "Condition")) {
     stop("Can't create a condition column as it already exists.")
